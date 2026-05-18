@@ -1,0 +1,14 @@
+﻿.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!dev.tfvars.example
+!prod.tfvars.example
+credentials.auto.tfvars
+.env
+local.settings.json
+__pycache__/
+*.pyc
+.venv/
+.databricks/
+*.log
