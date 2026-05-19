@@ -13,13 +13,75 @@ env:
   TF_VERSION: 1.9.8
   AZURE_FUNCTIONAPP_NAME: func-dmv2-dev-generator
   AZURE_RESOURCE_GROUP: rg-dmv2-dev
+  TFSTATE_RESOURCE_GROUP: rg-datamasterv2-tfstate-dev
+  TFSTATE_LOCATION: brazilsouth
+  TFSTATE_STORAGE_ACCOUNT: stdmv2tfstatedev
+  TFSTATE_CONTAINER: tfstate
   FUNCTION_PROJECT_PATH: azure_function/GeracaoData
 
 jobs:
+  setup-tf-backend:
+    name: Setup Terraform Backend
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Azure CLI Login
+        uses: azure/login@v2
+        with:
+          creds: |
+            {
+              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
+              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
+              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
+            }
+
+      - name: Create Terraform Backend Resource Group
+        run: |
+          if ! az group show --name ${{ env.TFSTATE_RESOURCE_GROUP }} &>/dev/null; then
+            az group create \
+              --name ${{ env.TFSTATE_RESOURCE_GROUP }} \
+              --location ${{ env.TFSTATE_LOCATION }}
+          else
+            echo "Terraform backend resource group already exists."
+          fi
+
+      - name: Create Terraform Backend Storage Account
+        run: |
+          if ! az storage account show \
+            --name ${{ env.TFSTATE_STORAGE_ACCOUNT }} \
+            --resource-group ${{ env.TFSTATE_RESOURCE_GROUP }} &>/dev/null; then
+            az storage account create \
+              --name ${{ env.TFSTATE_STORAGE_ACCOUNT }} \
+              --resource-group ${{ env.TFSTATE_RESOURCE_GROUP }} \
+              --location ${{ env.TFSTATE_LOCATION }} \
+              --sku Standard_LRS \
+              --kind StorageV2 \
+              --min-tls-version TLS1_2 \
+              --allow-blob-public-access false
+          else
+            echo "Terraform backend storage account already exists."
+          fi
+
+      - name: Create Terraform Backend Container
+        run: |
+          ACCOUNT_KEY=$(az storage account keys list \
+            --resource-group ${{ env.TFSTATE_RESOURCE_GROUP }} \
+            --account-name ${{ env.TFSTATE_STORAGE_ACCOUNT }} \
+            --query '[0].value' \
+            -o tsv)
+
+          az storage container create \
+            --name ${{ env.TFSTATE_CONTAINER }} \
+            --account-name ${{ env.TFSTATE_STORAGE_ACCOUNT }} \
+            --account-key "$ACCOUNT_KEY"
+
   terraform:
     name: Terraform Apply
     runs-on: ubuntu-latest
     environment: dev
+    needs: setup-tf-backend
 
     env:
       ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}

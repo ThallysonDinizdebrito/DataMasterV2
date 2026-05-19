@@ -374,6 +374,7 @@ Fluxo automatizado:
 ```text
 Checkout
 Azure Login
+Bootstrap do backend remoto Terraform
 Terraform Init
 Terraform Format Check
 Terraform Validate
@@ -385,7 +386,16 @@ Reinicia Function App
 Valida trigger publicado
 ```
 
-Assim, se a infraestrutura do projeto for destruída e o backend remoto do Terraform continuar existindo, um novo push na branch `dev` pode recriar os recursos e publicar novamente o pacote Python da Azure Function.
+Assim, se a infraestrutura do projeto for destruída, um novo push na branch `dev` pode recriar o backend remoto do Terraform, recriar os recursos e publicar novamente o pacote Python da Azure Function.
+
+Backend remoto criado automaticamente se não existir:
+
+```text
+Resource Group: rg-datamasterv2-tfstate-dev
+Storage Account: stdmv2tfstatedev
+Container: tfstate
+State key: datamasterv2-dev.tfstate
+```
 
 Publicação da Function na pipeline:
 
