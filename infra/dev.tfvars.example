@@ -1,0 +1,15 @@
+project_name    = "DataMasterV2"
+environment     = "dev"
+location        = "brazilsouth"
+subscription_id = "97eb265c-59ce-4122-bbe4-98f0d58d9208"
+tenant_id       = "1d1e1d50-bb96-44f7-81ad-10c6e41d1e6d"
+
+function_schedule              = "0 */1 * * * *"
+fake_num_clientes              = 1
+fake_num_restaurantes          = 1
+fake_num_drivers               = 1
+fake_num_items_per_restaurante = 8
+fake_num_pedidos               = 8
+
+enable_unity_catalog       = false
+unity_catalog_metastore_id = ""
