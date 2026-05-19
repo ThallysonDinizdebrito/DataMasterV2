@@ -4,7 +4,8 @@ bundle:
 variables:
   catalog:
     description: Unity Catalog catalog name
-    default: dbw_dmv2_dev
+    default: dbw_dmv2_dev_7405608830882565
+
              
   schema:
     description: Target schema for the DLT pipeline
@@ -21,7 +22,7 @@ targets:
     workspace:
       host: https://adb-7405608830882565.5.azuredatabricks.net/
     variables:
-      catalog: dbw_dmv2_dev
+      catalog: dbw_dmv2_dev_7405608830882565
       schema: default
       source_path: abfss://source@stdmv2devvxc02.dfs.core.windows.net/eventhub-capture
 
