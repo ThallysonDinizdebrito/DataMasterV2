@@ -241,7 +241,9 @@ jobs:
       - name: Validate Databricks Authentication
         id: databricks_auth
         continue-on-error: true
-        run: databricks current-user me
+        run: |
+          databricks auth describe
+          databricks current-user me
 
       - name: Validate Databricks Bundle
         if: steps.databricks_auth.outcome == 'success'

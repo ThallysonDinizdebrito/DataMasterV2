@@ -476,8 +476,9 @@ Configuração inicial do bundle:
 
 ```text
 Workspace: adb-7405606740420312.12.azuredatabricks.net
+Catalog: dbw_dmv2_dev
 Target schema: default
-Unity Catalog: não obrigatório nesta primeira versão, pois enable_unity_catalog está desabilitado no Terraform.
+Unity Catalog: obrigatório para pipeline DLT serverless.
 ```
 
 Pré-requisito importante:
