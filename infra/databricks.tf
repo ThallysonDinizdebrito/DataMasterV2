@@ -3,18 +3,6 @@ resource "databricks_group" "data_engineers" {
   display_name = "data-engineers"
 }
 
-resource "databricks_service_principal" "github_actions" {
-  count          = var.databricks_host == "" || var.client_id == null ? 0 : 1
-  application_id = var.client_id
-  display_name   = "sp-datamasterv2-github-actions"
-}
-
-resource "databricks_entitlements" "github_actions" {
-  count                = var.databricks_host == "" || var.client_id == null ? 0 : 1
-  service_principal_id = databricks_service_principal.github_actions[0].id
-  workspace_access     = true
-}
-
 resource "databricks_group" "data_scientists" {
   count        = var.databricks_host == "" ? 0 : 1
   display_name = "data-scientists"

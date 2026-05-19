@@ -486,11 +486,11 @@ Pré-requisito importante:
 O Service Principal usado nos GitHub Secrets precisa ter acesso ao Databricks Workspace e permissão para criar/atualizar pipelines Lakeflow/DLT.
 ```
 
-Se o GitHub Actions falhar com `User not authorized` no comando `databricks current-user me`, a autenticação Azure está funcionando, mas o Service Principal ainda não foi concedido dentro do workspace Databricks. Nesse caso, adicione o Service Principal como usuário/admin do workspace Databricks antes de executar novamente o workflow.
+Se o GitHub Actions exibir `User not authorized` no comando `databricks current-user me`, a autenticação Azure está funcionando, mas o Service Principal ainda não foi concedido dentro do workspace Databricks. Nesse caso, adicione o Service Principal como usuário/admin do workspace Databricks antes de executar novamente o workflow.
 
-O Terraform também cadastra o Service Principal no workspace quando `TF_VAR_databricks_host` está definido na pipeline:
+Enquanto essa permissão inicial não existir, a pipeline pula apenas o deploy do bundle Databricks e mantém Terraform e Azure Function automatizados.
 
 ```text
-databricks_service_principal.github_actions
-databricks_entitlements.github_actions
+Databricks bundle deployment skipped.
+The Azure Service Principal is not authorized in the Databricks workspace yet.
 ```

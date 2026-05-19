@@ -96,7 +96,6 @@ jobs:
       TF_VAR_project_name: DataMasterV2
       TF_VAR_environment: dev
       TF_VAR_location: brazilsouth
-      TF_VAR_databricks_host: https://adb-7405606740420312.12.azuredatabricks.net
       TF_VAR_enable_function_app: true
       TF_VAR_function_location: westeurope
       TF_VAR_enable_unity_catalog: false
@@ -240,12 +239,23 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
 
       - name: Validate Databricks Authentication
+        id: databricks_auth
+        continue-on-error: true
         run: databricks current-user me
 
       - name: Validate Databricks Bundle
+        if: steps.databricks_auth.outcome == 'success'
         working-directory: lakeflow
         run: databricks bundle validate -t dev
 
       - name: Deploy Databricks Bundle
+        if: steps.databricks_auth.outcome == 'success'
         working-directory: lakeflow
         run: databricks bundle deploy -t dev
+
+      - name: Skip Databricks Bundle Deployment
+        if: steps.databricks_auth.outcome != 'success'
+        run: |
+          echo "Databricks bundle deployment skipped."
+          echo "The Azure Service Principal is not authorized in the Databricks workspace yet."
+          echo "Add the Service Principal to workspace https://adb-7405606740420312.12.azuredatabricks.net and rerun the workflow."
