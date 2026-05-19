@@ -411,3 +411,7 @@ AZURE_CLIENT_SECRET
 AZURE_TENANT_ID
 AZURE_SUBSCRIPTION_ID
 ```
+
+Agora não precisa mais criar o state remoto na mão, desde que os GitHub Secrets existam e o Service Principal tenha permissão para criar Resource Group, Storage Account e Container.
+
+Status: automação de recriação completa adicionada e validada.
