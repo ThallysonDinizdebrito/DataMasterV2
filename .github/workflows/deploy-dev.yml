@@ -18,7 +18,7 @@ env:
   TFSTATE_STORAGE_ACCOUNT: stdmv2tfstatedev
   TFSTATE_CONTAINER: tfstate
   FUNCTION_PROJECT_PATH: azure_function/GeracaoData
-  DATABRICKS_HOST: https://adb-7405606740420312.12.azuredatabricks.net
+  DATABRICKS_HOST: https://adb-7405608830882565.5.azuredatabricks.net/
 
 jobs:
 
@@ -213,7 +213,7 @@ jobs:
             -o table
 
   # ============================================================
-  # JOB 4: Deploy Databricks Lakeflow
+  # JOB 4: Deploy Databricks Lakeflow.
   # CORRECAO: usa DATABRICKS_TOKEN (PAT) — removido azure-cli
   # ============================================================
   databricks:
@@ -223,7 +223,7 @@ jobs:
     needs: terraform
 
     env:
-      DATABRICKS_HOST: https://adb-7405606740420312.12.azuredatabricks.net
+      DATABRICKS_HOST: https://adb-7405608830882565.5.azuredatabricks.net/
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
     steps:

@@ -19,7 +19,7 @@ targets:
     mode: development
     default: true
     workspace:
-      host: https://adb-7405606740420312.12.azuredatabricks.net
+      host: https://adb-7405608830882565.5.azuredatabricks.net/
     variables:
       catalog: dbw_dmv2_dev
       schema: default

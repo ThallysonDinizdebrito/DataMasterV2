@@ -503,7 +503,7 @@ Esta etapa é obrigatória porque o GitHub Actions usa um Service Principal para
 Workspace usado:
 
 ```text
-https://adb-7405606740420312.12.azuredatabricks.net
+https://adb-7405608830882565.5.azuredatabricks.net/
 ```
 
 Application/Client ID usado:
@@ -516,7 +516,7 @@ Autenticar no Databricks CLI com um usuário admin do workspace:
 
 ```powershell
 databricks auth login `
-  --host https://adb-7405606740420312.12.azuredatabricks.net `
+  --host https://adb-7405608830882565.5.azuredatabricks.net/ `
   --profile dbw-dmv2-dev
 ```
 
