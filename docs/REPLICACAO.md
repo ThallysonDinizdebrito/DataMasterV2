@@ -328,16 +328,28 @@ azure-identity
 faker
 ```
 
-Deploy manual por ZIP:
+Deploy usando Azure Functions Core Tools:
 
 ```powershell
-Compress-Archive `
-  -Path host.json,requirements.txt,gerarFakeData `
-  -DestinationPath ..\..\functionapp.zip `
-  -Force
+func --version
 
-az functionapp deployment source config-zip `
+func azure functionapp publish func-dmv2-dev-generator --build remote --python
+```
+
+Validação da função publicada:
+
+```powershell
+az functionapp function list `
   --resource-group rg-dmv2-dev `
   --name func-dmv2-dev-generator `
-  --src C:\Users\Thall\infra\DataMasterV2\azure_function\functionapp.zip
+  --query "[].{name:name,trigger:config.bindings[0].type}" `
+  -o table
+```
+
+Resultado:
+
+```text
+Name                                   Trigger
+-------------------------------------  ------------
+func-dmv2-dev-generator/gerarFakeData  timerTrigger
 ```

@@ -6,8 +6,8 @@ from datetime import datetime, timezone
 
 import azure.functions as func
 from azure.eventhub import EventData
-from azure.eventhub.aio import EventHubProducerClient
-from azure.identity.aio import DefaultAzureCredential
+from azure.eventhub import EventHubProducerClient
+from azure.identity import DefaultAzureCredential
 from faker import Faker
 
 
@@ -151,7 +151,7 @@ def gerar_payload():
     }
 
 
-async def enviar_eventhub(payload):
+def enviar_eventhub(payload):
     eventhub_name = os.getenv("EVENTHUB_NAME")
     fully_qualified_namespace = os.getenv("EVENTHUB_FULLY_QUALIFIED_NAMESPACE")
 
@@ -169,8 +169,8 @@ async def enviar_eventhub(payload):
     )
 
     try:
-        async with producer:
-            event_data_batch = await producer.create_batch()
+        with producer:
+            event_data_batch = producer.create_batch()
             event = EventData(json.dumps(payload, ensure_ascii=False))
             event.properties = {
                 "event_type": "delivery_fake_batch",
@@ -178,12 +178,12 @@ async def enviar_eventhub(payload):
                 "batch_id": payload["batch_id"]
             }
             event_data_batch.add(event)
-            await producer.send_batch(event_data_batch)
+            producer.send_batch(event_data_batch)
     finally:
-        await credential.close()
+        credential.close()
 
 
-async def main(mytimer: func.TimerRequest) -> None:
+def main(mytimer: func.TimerRequest) -> None:
     payload = gerar_payload()
-    await enviar_eventhub(payload)
+    enviar_eventhub(payload)
     print(f"[OK] Batch {payload['batch_id']} enviado para o Event Hub")

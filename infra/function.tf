@@ -35,7 +35,6 @@ resource "azurerm_linux_function_app" "generator" {
 
   app_settings = {
     FUNCTIONS_WORKER_RUNTIME           = "python"
-    AzureWebJobsFeatureFlags           = "EnableWorkerIndexing"
     STORAGE_ACCOUNT_URL                = azurerm_storage_account.adls.primary_blob_endpoint
     SOURCE_CONTAINER                   = "source"
     REJECTED_CONTAINER                 = "rejeitados"
