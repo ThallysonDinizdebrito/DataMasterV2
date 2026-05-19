@@ -494,3 +494,109 @@ Enquanto essa permissão inicial não existir, a pipeline pula apenas o deploy d
 Databricks bundle deployment skipped.
 The Azure Service Principal is not authorized in the Databricks workspace yet.
 ```
+
+### 14.1. Liberar o Service Principal do GitHub Actions no Databricks
+
+Esta etapa é obrigatória porque o GitHub Actions usa um Service Principal para publicar o bundle Databricks. Mesmo que o login no Azure funcione, o Databricks exige que esse Service Principal exista dentro do workspace e tenha `workspace-access`.
+
+Workspace usado:
+
+```text
+https://adb-7405606740420312.12.azuredatabricks.net
+```
+
+Application/Client ID usado:
+
+```text
+7da295f3-e9d6-4a72-9f47-8e3bde7fcc92
+```
+
+Autenticar no Databricks CLI com um usuário admin do workspace:
+
+```powershell
+databricks auth login `
+  --host https://adb-7405606740420312.12.azuredatabricks.net `
+  --profile DEFAULT
+```
+
+Validar o usuário logado:
+
+```powershell
+databricks current-user me --profile DEFAULT
+```
+
+Criar o Service Principal no workspace Databricks:
+
+```powershell
+databricks service-principals create `
+  --application-id "7da295f3-e9d6-4a72-9f47-8e3bde7fcc92" `
+  --display-name "sp-datamasterv2-github-actions" `
+  --profile DEFAULT
+```
+
+Exemplo de retorno esperado:
+
+```json
+{
+  "active": true,
+  "applicationId": "7da295f3-e9d6-4a72-9f47-8e3bde7fcc92",
+  "id": "144754293986021"
+}
+```
+
+Criar o arquivo de patch SCIM para conceder `workspace-access`:
+
+```powershell
+@'
+{
+  "schemas": [
+    "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+  ],
+  "Operations": [
+    {
+      "op": "add",
+      "path": "entitlements",
+      "value": [
+        {
+          "value": "workspace-access"
+        }
+      ]
+    }
+  ]
+}
+'@ | Set-Content sp-patch.json
+```
+
+Aplicar o patch no Service Principal:
+
+```powershell
+databricks service-principals patch 144754293986021 --json @sp-patch.json --profile DEFAULT
+```
+
+Validar se o entitlement foi aplicado:
+
+```powershell
+databricks service-principals get 144754293986021 --profile DEFAULT
+```
+
+Resultado esperado:
+
+```json
+{
+  "applicationId": "7da295f3-e9d6-4a72-9f47-8e3bde7fcc92",
+  "entitlements": [
+    {
+      "value": "workspace-access"
+    }
+  ],
+  "id": "144754293986021"
+}
+```
+
+Depois disso, executar novamente o workflow `Deploy Dev` no GitHub Actions. O job Databricks deve deixar de pular o bundle e passar pelos comandos:
+
+```bash
+databricks current-user me
+databricks bundle validate -t dev
+databricks bundle deploy -t dev
+```
