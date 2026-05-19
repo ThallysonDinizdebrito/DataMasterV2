@@ -353,3 +353,51 @@ Name                                   Trigger
 -------------------------------------  ------------
 func-dmv2-dev-generator/gerarFakeData  timerTrigger
 ```
+
+## 13. Pipeline GitHub Actions para recriação completa
+
+A pipeline de desenvolvimento foi criada em:
+
+```text
+.github/workflows/deploy-dev.yml
+```
+
+Ela executa automaticamente em:
+
+```text
+push na branch dev
+workflow_dispatch manual
+```
+
+Fluxo automatizado:
+
+```text
+Checkout
+Azure Login
+Terraform Init
+Terraform Format Check
+Terraform Validate
+Terraform Apply
+Instala Azure Functions Core Tools
+Valida sintaxe Python
+Publica Azure Function via func CLI
+Reinicia Function App
+Valida trigger publicado
+```
+
+Assim, se a infraestrutura do projeto for destruída e o backend remoto do Terraform continuar existindo, um novo push na branch `dev` pode recriar os recursos e publicar novamente o pacote Python da Azure Function.
+
+Publicação da Function na pipeline:
+
+```powershell
+func azure functionapp publish func-dmv2-dev-generator --build remote --python
+```
+
+Secrets necessários no GitHub:
+
+```text
+AZURE_CLIENT_ID
+AZURE_CLIENT_SECRET
+AZURE_TENANT_ID
+AZURE_SUBSCRIPTION_ID
+```

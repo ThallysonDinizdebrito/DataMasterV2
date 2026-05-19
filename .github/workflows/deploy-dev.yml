@@ -1,0 +1,140 @@
+name: Deploy Dev
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  TF_VERSION: 1.9.8
+  AZURE_FUNCTIONAPP_NAME: func-dmv2-dev-generator
+  AZURE_RESOURCE_GROUP: rg-dmv2-dev
+  FUNCTION_PROJECT_PATH: azure_function/GeracaoData
+
+jobs:
+  terraform:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    environment: dev
+
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      TF_VAR_client_secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+      TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_project_name: DataMasterV2
+      TF_VAR_environment: dev
+      TF_VAR_location: brazilsouth
+      TF_VAR_enable_function_app: true
+      TF_VAR_function_location: westeurope
+      TF_VAR_enable_unity_catalog: false
+      TF_VAR_unity_catalog_metastore_id: ""
+      TF_VAR_function_schedule: "0 */1 * * * *"
+      TF_VAR_fake_num_clientes: 1
+      TF_VAR_fake_num_restaurantes: 1
+      TF_VAR_fake_num_drivers: 1
+      TF_VAR_fake_num_items_per_restaurante: 8
+      TF_VAR_fake_num_pedidos: 8
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure CLI Login
+        uses: azure/login@v2
+        with:
+          creds: |
+            {
+              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
+              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
+              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
+            }
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        working-directory: infra
+        run: terraform init
+
+      - name: Terraform Format Check
+        working-directory: infra
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        working-directory: infra
+        run: terraform validate
+
+      - name: Terraform Apply
+        working-directory: infra
+        run: terraform apply -auto-approve
+
+      - name: Export Terraform Outputs
+        working-directory: infra
+        run: terraform output
+
+  function:
+    name: Publish Azure Function
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: terraform
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure CLI Login
+        uses: azure/login@v2
+        with:
+          creds: |
+            {
+              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
+              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
+              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
+            }
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Azure Functions Core Tools
+        run: npm install -g azure-functions-core-tools@4 --unsafe-perm true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate Python Function Syntax
+        run: python -m py_compile ${{ env.FUNCTION_PROJECT_PATH }}/gerarFakeData/__init__.py
+
+      - name: Publish Function App via func CLI
+        working-directory: ${{ env.FUNCTION_PROJECT_PATH }}
+        run: func azure functionapp publish ${{ env.AZURE_FUNCTIONAPP_NAME }} --build remote --python
+
+      - name: Restart Function App
+        run: |
+          az functionapp restart \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }}
+
+      - name: Validate Published Function Trigger
+        run: |
+          az functionapp function list \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME }} \
+            --query "[].{name:name,trigger:config.bindings[0].type}" \
+            -o table
