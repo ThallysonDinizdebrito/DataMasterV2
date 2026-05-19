@@ -21,6 +21,10 @@ env:
   DATABRICKS_HOST: https://adb-7405606740420312.12.azuredatabricks.net
 
 jobs:
+
+  # ============================================================
+  # JOB 1: Cria backend remoto para o tfstate
+  # ============================================================
   setup-tf-backend:
     name: Setup Terraform Backend
     runs-on: ubuntu-latest
@@ -78,6 +82,9 @@ jobs:
             --account-name ${{ env.TFSTATE_STORAGE_ACCOUNT }} \
             --account-key "$ACCOUNT_KEY"
 
+  # ============================================================
+  # JOB 2: Terraform Apply
+  # ============================================================
   terraform:
     name: Terraform Apply
     runs-on: ubuntu-latest
@@ -147,6 +154,9 @@ jobs:
         working-directory: infra
         run: terraform output
 
+  # ============================================================
+  # JOB 3: Deploy Azure Function
+  # ============================================================
   function:
     name: Publish Azure Function
     runs-on: ubuntu-latest
@@ -202,6 +212,10 @@ jobs:
             --query "[].{name:name,trigger:config.bindings[0].type}" \
             -o table
 
+  # ============================================================
+  # JOB 4: Deploy Databricks Lakeflow
+  # CORRECAO: usa DATABRICKS_TOKEN (PAT) — removido azure-cli
+  # ============================================================
   databricks:
     name: Deploy Databricks Lakeflow
     runs-on: ubuntu-latest
@@ -209,26 +223,12 @@ jobs:
     needs: terraform
 
     env:
-      DATABRICKS_AUTH_TYPE: azure-cli
       DATABRICKS_HOST: https://adb-7405606740420312.12.azuredatabricks.net
-      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Azure CLI Login
-        uses: azure/login@v2
-        with:
-          creds: |
-            {
-              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
-              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
-              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
-            }
 
       - name: Setup Databricks CLI
         uses: databricks/setup-cli@main
@@ -239,25 +239,18 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
 
       - name: Validate Databricks Authentication
-        id: databricks_auth
-        continue-on-error: true
         run: |
           databricks auth describe
           databricks current-user me
 
       - name: Validate Databricks Bundle
-        if: steps.databricks_auth.outcome == 'success'
         working-directory: lakeflow
         run: databricks bundle validate -t dev
 
       - name: Deploy Databricks Bundle
-        if: steps.databricks_auth.outcome == 'success'
         working-directory: lakeflow
         run: databricks bundle deploy -t dev
 
-      - name: Skip Databricks Bundle Deployment
-        if: steps.databricks_auth.outcome != 'success'
-        run: |
-          echo "Databricks bundle deployment skipped."
-          echo "The Azure Service Principal is not authorized in the Databricks workspace yet."
-          echo "Add the Service Principal to workspace https://adb-7405606740420312.12.azuredatabricks.net and rerun the workflow."
+      - name: Bundle Deploy Summary
+        working-directory: lakeflow
+        run: databricks bundle summary -t dev

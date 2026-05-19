@@ -5,7 +5,7 @@ variables:
   catalog:
     description: Unity Catalog catalog name
     default: dbw_dmv2_dev
-
+             
   schema:
     description: Target schema for the DLT pipeline
     default: default

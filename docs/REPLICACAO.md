@@ -477,7 +477,7 @@ Configuração inicial do bundle:
 ```text
 Workspace: adb-7405606740420312.12.azuredatabricks.net
 Catalog: dbw_dmv2_dev
-Target schema: default
+Target schema: dbw-dmv2-dev
 Unity Catalog: obrigatório para pipeline DLT serverless.
 ```
 
@@ -517,13 +517,13 @@ Autenticar no Databricks CLI com um usuário admin do workspace:
 ```powershell
 databricks auth login `
   --host https://adb-7405606740420312.12.azuredatabricks.net `
-  --profile DEFAULT
+  --profile dbw-dmv2-dev
 ```
 
 Validar o usuário logado:
 
 ```powershell
-databricks current-user me --profile DEFAULT
+databricks current-user me --profile dbw-dmv2-dev
 ```
 
 Criar o Service Principal no workspace Databricks:
@@ -571,13 +571,13 @@ Criar o arquivo de patch SCIM para conceder `workspace-access`:
 Aplicar o patch no Service Principal:
 
 ```powershell
-databricks service-principals patch 144754293986021 --json @sp-patch.json --profile DEFAULT
+databricks service-principals patch 144754293986021 --json @sp-patch.json --profile dbw-dmv2-dev
 ```
 
 Validar se o entitlement foi aplicado:
 
 ```powershell
-databricks service-principals get 144754293986021 --profile DEFAULT
+databricks service-principals get 144754293986021 --profile dbw-dmv2-dev
 ```
 
 Resultado esperado:
