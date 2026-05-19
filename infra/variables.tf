@@ -99,6 +99,12 @@ variable "enable_function_app" {
   default     = false
 }
 
+variable "function_location" {
+  description = "Azure region used only for the Function App when the main region has App Service quota restrictions."
+  type        = string
+  default     = "westeurope"
+}
+
 variable "eventhub_partition_count" {
   description = "Number of partitions for the main delivery events Event Hub."
   type        = number

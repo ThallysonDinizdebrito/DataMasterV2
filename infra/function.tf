@@ -3,7 +3,7 @@ resource "azurerm_service_plan" "function" {
 
   name                = "asp-${local.name_prefix}-function"
   resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
+  location            = var.function_location
   os_type             = "Linux"
   sku_name            = "Y1"
   tags                = local.tags
@@ -14,7 +14,7 @@ resource "azurerm_linux_function_app" "generator" {
 
   name                       = "func-${local.name_prefix}-generator"
   resource_group_name        = azurerm_resource_group.main.name
-  location                   = azurerm_resource_group.main.location
+  location                   = var.function_location
   service_plan_id            = azurerm_service_plan.function[0].id
   storage_account_name       = azurerm_storage_account.adls.name
   storage_account_access_key = azurerm_storage_account.adls.primary_access_key
@@ -48,6 +48,12 @@ resource "azurerm_linux_function_app" "generator" {
     NUM_DRIVERS                        = tostring(var.fake_num_drivers)
     NUM_ITEMS_PER_RESTAURANTE          = tostring(var.fake_num_items_per_restaurante)
     NUM_PEDIDOS                        = tostring(var.fake_num_pedidos)
+  }
+
+  lifecycle {
+    ignore_changes = [
+      tags["hidden-link: /app-insights-resource-id"]
+    ]
   }
 }
 

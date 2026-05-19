@@ -237,19 +237,48 @@ grafana_endpoint          = https://grafana-dmv2-dev-dwcaceg3ceg2c3bm.sbr.grafan
 key_vault_name            = kv-dmv2dev-vxc02
 ```
 
-## 11. Pendência de quota para Azure Function
+## 11. Azure Function em West Europe
 
-Para ativar a Azure Function no Terraform, será necessário pedir aumento de quota na Azure para App Service/Total VMs na região usada.
+A Azure Function foi ativada em `westeurope` para contornar a quota zero de App Service em `brazilsouth`, mantendo o restante da arquitetura em Brazil South.
 
-Depois da quota aprovada, alterar:
+Configuração usada no `dev.auto.tfvars` local:
 
 ```hcl
 enable_function_app = true
+function_location   = "westeurope"
 ```
 
-E executar:
+Recursos criados:
+
+```text
+asp-dmv2-dev-function
+func-dmv2-dev-generator
+```
+
+Validação:
 
 ```powershell
-terraform plan
-terraform apply -auto-approve
+az functionapp show `
+  --name func-dmv2-dev-generator `
+  --resource-group rg-dmv2-dev `
+  --query "{name:name,location:location,state:state,hostNames:defaultHostName,kind:kind}" `
+  -o json
+```
+
+Resultado:
+
+```json
+{
+  "hostNames": "func-dmv2-dev-generator.azurewebsites.net",
+  "kind": "functionapp,linux",
+  "location": "West Europe",
+  "name": "func-dmv2-dev-generator",
+  "state": "Running"
+}
+```
+
+O `terraform plan` final retornou:
+
+```text
+No changes. Your infrastructure matches the configuration.
 ```

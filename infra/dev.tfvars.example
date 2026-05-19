@@ -1,4 +1,4 @@
-project_name    = "DataMasterV2"
+﻿project_name    = "DataMasterV2"
 environment     = "dev"
 location        = "brazilsouth"
 subscription_id = "97eb265c-59ce-4122-bbe4-98f0d58d9208"
@@ -13,3 +13,7 @@ fake_num_pedidos               = 8
 
 enable_unity_catalog       = false
 unity_catalog_metastore_id = ""
+
+enable_function_app = true
+function_location   = "westeurope"
+
