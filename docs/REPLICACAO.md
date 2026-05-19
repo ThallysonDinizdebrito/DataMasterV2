@@ -282,3 +282,62 @@ O `terraform plan` final retornou:
 ```text
 No changes. Your infrastructure matches the configuration.
 ```
+
+## 12. Código Python da Azure Function
+
+O código da Function foi criado em:
+
+```text
+azure_function/GeracaoData
+```
+
+Arquivos principais:
+
+```text
+host.json
+requirements.txt
+gerarFakeData/function.json
+gerarFakeData/__init__.py
+```
+
+A Function replica a lógica do gerador de dados fake do projeto anterior, gerando:
+
+```text
+clientes
+restaurantes
+items
+drivers
+orders
+```
+
+No DataMasterV2, o envio foi adaptado para Event Hub usando Managed Identity:
+
+```text
+Azure Function Timer
+  -> Event Hub delivery-events
+  -> Event Hub Capture
+  -> ADLS Gen2 source/eventhub-capture
+```
+
+Dependências:
+
+```text
+azure-functions
+azure-eventhub
+azure-identity
+faker
+```
+
+Deploy manual por ZIP:
+
+```powershell
+Compress-Archive `
+  -Path host.json,requirements.txt,gerarFakeData `
+  -DestinationPath ..\..\functionapp.zip `
+  -Force
+
+az functionapp deployment source config-zip `
+  --resource-group rg-dmv2-dev `
+  --name func-dmv2-dev-generator `
+  --src C:\Users\Thall\infra\DataMasterV2\azure_function\functionapp.zip
+```
