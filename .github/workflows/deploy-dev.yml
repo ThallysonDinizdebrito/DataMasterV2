@@ -211,6 +211,9 @@ jobs:
     env:
       DATABRICKS_AUTH_TYPE: azure-client-secret
       DATABRICKS_HOST: https://adb-7405606740420312.12.azuredatabricks.net
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       DATABRICKS_AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       DATABRICKS_AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
       DATABRICKS_AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -226,6 +229,9 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Validate Databricks Authentication
+        run: databricks current-user me
 
       - name: Validate Databricks Bundle
         working-directory: lakeflow
