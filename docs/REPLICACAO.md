@@ -487,3 +487,10 @@ O Service Principal usado nos GitHub Secrets precisa ter acesso ao Databricks Wo
 ```
 
 Se o GitHub Actions falhar com `User not authorized` no comando `databricks current-user me`, a autenticação Azure está funcionando, mas o Service Principal ainda não foi concedido dentro do workspace Databricks. Nesse caso, adicione o Service Principal como usuário/admin do workspace Databricks antes de executar novamente o workflow.
+
+O Terraform também cadastra o Service Principal no workspace quando `TF_VAR_databricks_host` está definido na pipeline:
+
+```text
+databricks_service_principal.github_actions
+databricks_entitlements.github_actions
+```

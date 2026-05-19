@@ -96,6 +96,7 @@ jobs:
       TF_VAR_project_name: DataMasterV2
       TF_VAR_environment: dev
       TF_VAR_location: brazilsouth
+      TF_VAR_databricks_host: https://adb-7405606740420312.12.azuredatabricks.net
       TF_VAR_enable_function_app: true
       TF_VAR_function_location: westeurope
       TF_VAR_enable_unity_catalog: false
