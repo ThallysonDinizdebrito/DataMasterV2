@@ -18,6 +18,7 @@ env:
   TFSTATE_STORAGE_ACCOUNT: stdmv2tfstatedev
   TFSTATE_CONTAINER: tfstate
   FUNCTION_PROJECT_PATH: azure_function/GeracaoData
+  DATABRICKS_HOST: https://adb-7405606740420312.12.azuredatabricks.net
 
 jobs:
   setup-tf-backend:
@@ -200,3 +201,36 @@ jobs:
             --name ${{ env.AZURE_FUNCTIONAPP_NAME }} \
             --query "[].{name:name,trigger:config.bindings[0].type}" \
             -o table
+
+  databricks:
+    name: Deploy Databricks Lakeflow
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: terraform
+
+    env:
+      DATABRICKS_AUTH_TYPE: azure-client-secret
+      DATABRICKS_HOST: https://adb-7405606740420312.12.azuredatabricks.net
+      DATABRICKS_AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      DATABRICKS_AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      DATABRICKS_AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Databricks CLI
+        uses: databricks/setup-cli@main
+
+      - name: Setup Terraform for Databricks Bundle
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Validate Databricks Bundle
+        working-directory: lakeflow
+        run: databricks bundle validate -t dev
+
+      - name: Deploy Databricks Bundle
+        working-directory: lakeflow
+        run: databricks bundle deploy -t dev

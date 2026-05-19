@@ -1,0 +1,50 @@
+bundle:
+  name: datamasterv2-delivery-lakeflow
+
+variables:
+  catalog:
+    description: Unity Catalog catalog name
+    default: ""
+
+  schema:
+    description: Target schema for the DLT pipeline
+    default: default
+
+  source_path:
+    description: Event Hub Capture AVRO source path
+    default: abfss://source@stdmv2devvxc02.dfs.core.windows.net/eventhub-capture
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://adb-7405606740420312.12.azuredatabricks.net
+    variables:
+      catalog: ""
+      schema: default
+      source_path: abfss://source@stdmv2devvxc02.dfs.core.windows.net/eventhub-capture
+
+resources:
+  pipelines:
+    delivery_eventhub_medallion:
+      name: dlt-dmv2-delivery-eventhub-dev
+      target: ${var.schema}
+      development: true
+      continuous: false
+      photon: true
+      channel: CURRENT
+      serverless: true
+
+      configuration:
+        source_path: ${var.source_path}
+        catalog_name: ${var.catalog}
+        schema_name: ${var.schema}
+
+      libraries:
+        - file:
+            path: ./bronze/bronze_eventhub_capture.py
+        - file:
+            path: ./silver/silver_delivery_entities.py
+        - file:
+            path: ./gold/gold_delivery_metrics.py

@@ -415,3 +415,73 @@ AZURE_SUBSCRIPTION_ID
 Agora não precisa mais criar o state remoto na mão, desde que os GitHub Secrets existam e o Service Principal tenha permissão para criar Resource Group, Storage Account e Container.
 
 Status: automação de recriação completa adicionada e validada.
+
+## 14. Passo 2 - Pipeline Databricks Lakeflow/DLT
+
+Com a Azure Function pausada para controle de volume, o próximo componente criado é o pipeline Databricks para processar os arquivos AVRO já gerados pelo Event Hub Capture.
+
+Estrutura criada:
+
+```text
+lakeflow/
+  databricks.yml
+  README.md
+  bronze/bronze_eventhub_capture.py
+  silver/silver_delivery_entities.py
+  gold/gold_delivery_metrics.py
+```
+
+Fonte dos dados:
+
+```text
+abfss://source@stdmv2devvxc02.dfs.core.windows.net/eventhub-capture
+```
+
+Fluxo medallion:
+
+```text
+Event Hub Capture AVRO
+  -> Bronze raw
+  -> Bronze batches parseados
+  -> Silver entidades delivery
+  -> Gold métricas de negócio
+```
+
+Tabelas planejadas:
+
+```text
+bronze_eventhub_capture_raw
+bronze_delivery_batches
+silver_clientes
+silver_restaurantes
+silver_drivers
+silver_items
+silver_orders
+silver_order_items
+gold_daily_delivery_kpis
+gold_restaurant_performance
+gold_item_category_metrics
+```
+
+Deploy do bundle:
+
+```powershell
+databricks bundle validate -t dev
+databricks bundle deploy -t dev
+```
+
+A pipeline GitHub Actions também recebeu um job `databricks` para validar e publicar o bundle automaticamente após o Terraform.
+
+Configuração inicial do bundle:
+
+```text
+Workspace: adb-7405606740420312.12.azuredatabricks.net
+Target schema: default
+Unity Catalog: não obrigatório nesta primeira versão, pois enable_unity_catalog está desabilitado no Terraform.
+```
+
+Pré-requisito importante:
+
+```text
+O Service Principal usado nos GitHub Secrets precisa ter acesso ao Databricks Workspace e permissão para criar/atualizar pipelines Lakeflow/DLT.
+```
