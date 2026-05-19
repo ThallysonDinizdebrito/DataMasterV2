@@ -209,18 +209,26 @@ jobs:
     needs: terraform
 
     env:
-      DATABRICKS_AUTH_TYPE: azure-client-secret
+      DATABRICKS_AUTH_TYPE: azure-cli
       DATABRICKS_HOST: https://adb-7405606740420312.12.azuredatabricks.net
       ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      DATABRICKS_AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      DATABRICKS_AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      DATABRICKS_AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Azure CLI Login
+        uses: azure/login@v2
+        with:
+          creds: |
+            {
+              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
+              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
+              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
+            }
 
       - name: Setup Databricks CLI
         uses: databricks/setup-cli@main
