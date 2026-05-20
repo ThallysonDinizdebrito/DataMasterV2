@@ -105,29 +105,29 @@ variable "function_location" {
   default     = "westeurope"
 }
 
-variable "eventhub_partition_count" {
-  description = "Number of partitions for the main delivery events Event Hub."
-  type        = number
-  default     = 2
-}
+# variable "eventhub_partition_count" {
+#   description = "Number of partitions for the main delivery events Event Hub."
+#   type        = number
+#   default     = 2
+# }
 
-variable "eventhub_message_retention_days" {
-  description = "Message retention in days for the main delivery events Event Hub."
-  type        = number
-  default     = 1
-}
+# variable "eventhub_message_retention_days" {
+#   description = "Message retention in days for the main delivery events Event Hub."
+#   type        = number
+#   default     = 1
+# }
 
-variable "eventhub_capture_interval_seconds" {
-  description = "Event Hub Capture interval in seconds."
-  type        = number
-  default     = 60
-}
+# variable "eventhub_capture_interval_seconds" {
+#   description = "Event Hub Capture interval in seconds."
+#   type        = number
+#   default     = 60
+# }
 
-variable "eventhub_capture_size_limit_bytes" {
-  description = "Event Hub Capture file size limit in bytes."
-  type        = number
-  default     = 10485760
-}
+# variable "eventhub_capture_size_limit_bytes" {
+#   description = "Event Hub Capture file size limit in bytes."
+#   type        = number
+#   default     = 10485760
+# }
 
 variable "fake_num_clientes" {
   type    = number

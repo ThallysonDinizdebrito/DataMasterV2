@@ -22,17 +22,17 @@ output "function_app_name" {
   value = var.enable_function_app ? azurerm_linux_function_app.generator[0].name : null
 }
 
-output "eventhub_namespace_name" {
-  value = azurerm_eventhub_namespace.main.name
-}
+# output "eventhub_namespace_name" {
+#   value = azurerm_eventhub_namespace.main.name
+# }
 
-output "eventhub_name" {
-  value = azurerm_eventhub.delivery_events.name
-}
+# output "eventhub_name" {
+#   value = azurerm_eventhub.delivery_events.name
+# }
 
-output "eventhub_capture_path" {
-  value = "source/eventhub-capture/{Namespace}/{EventHub}/{PartitionId}/{Year}/{Month}/{Day}/{Hour}/{Minute}/{Second}"
-}
+# output "eventhub_capture_path" {
+#   value = "source/eventhub-capture/{Namespace}/{EventHub}/{PartitionId}/{Year}/{Month}/{Day}/{Hour}/{Minute}/{Second}"
+# }
 
 output "databricks_workspace_name" {
   value = azurerm_databricks_workspace.main.name

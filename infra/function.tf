@@ -38,9 +38,9 @@ resource "azurerm_linux_function_app" "generator" {
     STORAGE_ACCOUNT_URL                = azurerm_storage_account.adls.primary_blob_endpoint
     SOURCE_CONTAINER                   = "source"
     REJECTED_CONTAINER                 = "rejeitados"
-    EVENTHUB_NAMESPACE                 = azurerm_eventhub_namespace.main.name
-    EVENTHUB_NAME                      = azurerm_eventhub.delivery_events.name
-    EVENTHUB_FULLY_QUALIFIED_NAMESPACE = "${azurerm_eventhub_namespace.main.name}.servicebus.windows.net"
+    # EVENTHUB_NAMESPACE                 = azurerm_eventhub_namespace.main.name
+    # EVENTHUB_NAME                      = azurerm_eventhub.delivery_events.name
+    # EVENTHUB_FULLY_QUALIFIED_NAMESPACE = "${azurerm_eventhub_namespace.main.name}.servicebus.windows.net"
     FUNCTION_SCHEDULE                  = var.function_schedule
     NUM_CLIENTES                       = tostring(var.fake_num_clientes)
     NUM_RESTAURANTES                   = tostring(var.fake_num_restaurantes)
@@ -72,10 +72,10 @@ resource "azurerm_role_assignment" "function_keyvault_secrets_user" {
   principal_id         = azurerm_linux_function_app.generator[0].identity[0].principal_id
 }
 
-resource "azurerm_role_assignment" "function_eventhub_sender" {
-  count = var.enable_function_app ? 1 : 0
+# resource "azurerm_role_assignment" "function_eventhub_sender" {
+#   count = var.enable_function_app ? 1 : 0
 
-  scope                = azurerm_eventhub_namespace.main.id
-  role_definition_name = "Azure Event Hubs Data Sender"
-  principal_id         = azurerm_linux_function_app.generator[0].identity[0].principal_id
-}
+#   scope                = azurerm_eventhub_namespace.main.id
+#   role_definition_name = "Azure Event Hubs Data Sender"
+#   principal_id         = azurerm_linux_function_app.generator[0].identity[0].principal_id
+# }
