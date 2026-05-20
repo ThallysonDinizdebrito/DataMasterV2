@@ -699,3 +699,95 @@ Checklist antes de rodar a Action:
 ```
 
 Depois que esses secrets existem no GitHub, não é necessário preparar nada manualmente no computador local para o deploy via Action. Os comandos locais com `$env:BUNDLE_VAR_storage_account_key` são apenas para teste manual no PowerShell.
+
+### 14.3. Papel do Makefile no projeto
+
+O `Makefile` não substitui o GitHub Actions e não altera o workflow automaticamente.
+
+Ele funciona como uma interface local padronizada para executar comandos do projeto com nomes simples.
+
+Na prática:
+
+```text
+GitHub Actions = automação oficial de deploy no GitHub.
+Makefile       = atalhos locais para validar, operar e disparar comandos.
+```
+
+Exemplo: em vez de lembrar comandos longos como:
+
+```powershell
+databricks bundle validate -t dev
+databricks bundle deploy -t dev
+databricks bundle run delivery_eventhub_medallion_v2 -t dev
+```
+
+é possível usar:
+
+```powershell
+make databricks-validate
+make databricks-deploy
+make databricks-run
+```
+
+Comandos principais adicionados ao `Makefile`:
+
+```text
+make help                  Lista comandos disponíveis.
+make validate              Valida Terraform, Azure Function e Databricks Bundle.
+make tf-init               Inicializa Terraform.
+make tf-fmt                Formata arquivos Terraform.
+make tf-validate           Valida Terraform.
+make tf-plan               Gera plano Terraform.
+make tf-apply              Aplica Terraform localmente.
+make function-check        Valida sintaxe Python da Azure Function.
+make databricks-auth       Valida autenticação no Databricks.
+make databricks-validate   Valida Databricks Bundle.
+make databricks-deploy     Faz deploy do Databricks Bundle.
+make databricks-summary    Mostra resumo do bundle.
+make databricks-run        Inicia a pipeline DLT pelo bundle.
+make secrets-list          Lista GitHub Secrets do repositório.
+make action-run            Dispara o workflow Deploy Dev.
+make action-status         Lista execuções recentes do workflow.
+make deploy-dev            Executa deploy local completo.
+```
+
+Uso recomendado para validação local sem aplicar mudanças:
+
+```powershell
+make help
+make secrets-list
+make function-check
+make tf-init
+make tf-validate
+make databricks-auth
+```
+
+Para validar o Databricks Bundle localmente, antes defina a variável de ambiente:
+
+```powershell
+$env:BUNDLE_VAR_storage_account_key = (az storage account keys list --resource-group rg-dmv2-dev --account-name stdmv2devvxc02 --query "[0].value" -o tsv).Trim()
+make databricks-validate
+```
+
+Na GitHub Action, essa variável é preenchida automaticamente pelo secret:
+
+```text
+STORAGE_ACCOUNT_KEY
+```
+
+Comandos que executam mudanças reais e devem ser usados com cuidado:
+
+```text
+make tf-apply
+make databricks-deploy
+make databricks-run
+make deploy-dev
+make action-run
+```
+
+Resumo:
+
+```text
+O Makefile deixa o projeto mais profissional porque padroniza a operação local,
+reduz erro manual, facilita demonstração e documenta comandos importantes em um único lugar.
+```
