@@ -42,10 +42,10 @@ output "databricks_workspace_url" {
   value = azurerm_databricks_workspace.main.workspace_url
 }
 
-output "grafana_name" {
-  value = azurerm_dashboard_grafana.main.name
-}
+# output "grafana_name" {
+#   value = azurerm_dashboard_grafana.main.name
+#}
 
-output "grafana_endpoint" {
-  value = azurerm_dashboard_grafana.main.endpoint
-}
+#output "grafana_endpoint" {
+#  value = azurerm_dashboard_grafana.main.endpoint
+#}

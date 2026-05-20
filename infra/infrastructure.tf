@@ -192,36 +192,36 @@ resource "azurerm_databricks_workspace" "main" {
   }
 }
 
-resource "azurerm_user_assigned_identity" "grafana" {
-  name                = "mi-${local.name_prefix}-grafana"
-  resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
-  tags                = local.tags
-}
+#resource "azurerm_user_assigned_identity" "grafana" {
+#  name                = "mi-${local.name_prefix}-grafana"
+#  resource_group_name = azurerm_resource_group.main.name
+#  location            = azurerm_resource_group.main.location
+#  tags                = local.tags
+# }
 
-resource "azurerm_dashboard_grafana" "main" {
-  name                          = "grafana-${local.name_prefix}"
-  resource_group_name           = azurerm_resource_group.main.name
-  location                      = azurerm_resource_group.main.location
-  sku                           = "Standard"
-  grafana_major_version         = "11"
-  public_network_access_enabled = true
-  tags                          = local.tags
+# resource "azurerm_dashboard_grafana" "main" {
+ # name                          = "grafana-${local.name_prefix}"
+ # resource_group_name           = azurerm_resource_group.main.name
+ # location                      = azurerm_resource_group.main.location
+ # sku                           = "Standard"
+ # grafana_major_version         = "11"
+ # public_network_access_enabled = true
+ # tags                          = local.tags
 
-  identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.grafana.id]
-  }
-}
+ # identity {
+ #   type         = "UserAssigned"
+ #   identity_ids = [azurerm_user_assigned_identity.grafana.id]
+ # }
+# }
 
-resource "azurerm_role_assignment" "grafana_law_reader" {
-  scope                = azurerm_log_analytics_workspace.main.id
-  role_definition_name = "Log Analytics Reader"
-  principal_id         = azurerm_user_assigned_identity.grafana.principal_id
-}
+# resource "azurerm_role_assignment" "grafana_law_reader" {
+#  scope                = azurerm_log_analytics_workspace.main.id
+#  role_definition_name = "Log Analytics Reader"
+#  principal_id         = azurerm_user_assigned_identity.grafana.principal_id
+#}
 
-resource "azurerm_role_assignment" "grafana_monitoring_reader" {
-  scope                = azurerm_resource_group.main.id
-  role_definition_name = "Monitoring Reader"
-  principal_id         = azurerm_user_assigned_identity.grafana.principal_id
-}
+#resource "azurerm_role_assignment" "grafana_monitoring_reader" {
+#  scope                = azurerm_resource_group.main.id
+#  role_definition_name = "Monitoring Reader"
+#  principal_id         = azurerm_user_assigned_identity.grafana.principal_id
+#}
