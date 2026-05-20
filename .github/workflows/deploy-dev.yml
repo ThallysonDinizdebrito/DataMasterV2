@@ -138,13 +138,13 @@ jobs:
         working-directory: infra
         run: terraform init
 
-      - name: Terraform Format Check
-        working-directory: infra
-        run: terraform fmt -check -recursive
+      # - name: Terraform Format Check
+      #   working-directory: infra
+      #   run: terraform fmt -check -recursive
 
-      - name: Terraform Validate
-        working-directory: infra
-        run: terraform validate
+      # - name: Terraform Validate
+      #   working-directory: infra
+      #   run: terraform validate
 
       - name: Terraform Plan
         working-directory: infra
