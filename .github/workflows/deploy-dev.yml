@@ -86,22 +86,6 @@ jobs:
   # JOB 2: Terraform Apply
   # ============================================================
   terraform:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     name: Terraform Apply
     runs-on: ubuntu-latest
     environment: dev
@@ -162,28 +146,17 @@ jobs:
         working-directory: infra
         run: terraform validate
 
-      # =========================
-      # 🔍 NOVO: TERRAFORM PLAN
-      # =========================
       - name: Terraform Plan
         working-directory: infra
         run: terraform plan -out=tfplan
 
-      # =========================
-      # 💾 SALVA PLAN COMO ARTEFATO
-      # =========================
-      - name: Upload Terraform Plan
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan
-          path: infra/tfplan
-
-      # =========================
-      # 🚀 APPLY (CONTROLADO)
-      # =========================
       - name: Terraform Apply
         working-directory: infra
-        run: terraform apply -auto-approve tfplan
+        run: terraform apply -auto-approve
+
+      - name: Export Terraform Outputs
+        working-directory: infra
+        run: terraform output
 
   # ============================================================
   # JOB 3: Deploy Azure Function
