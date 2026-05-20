@@ -1,5 +1,5 @@
 bundle:
-  name: datamasterv2-delivery-lakeflow
+  name: datamasterv2-delivery-lakeflow-v2
 
 variables:
   catalog:
@@ -15,6 +15,9 @@ variables:
     description: Event Hub Capture AVRO source path
     default: abfss://source@stdmv2devvxc02.dfs.core.windows.net/eventhub-capture
 
+  storage_account_key:
+    description: Storage account key for ADLS Gen2 source access
+
 targets:
   dev:
     mode: development
@@ -28,7 +31,7 @@ targets:
 
 resources:
   pipelines:
-    delivery_eventhub_medallion:
+    delivery_eventhub_medallion_v2:
       name: dlt-dmv2-delivery-eventhub-dev
       catalog: ${var.catalog}
       target: ${var.schema}
@@ -42,6 +45,8 @@ resources:
         source_path: ${var.source_path}
         catalog_name: ${var.catalog}
         schema_name: ${var.schema}
+        spark.hadoop.fs.azure.account.key.stdmv2devvxc02.dfs.core.windows.net: ${var.storage_account_key}
+
 
       libraries:
         - file:

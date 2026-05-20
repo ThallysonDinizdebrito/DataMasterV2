@@ -231,7 +231,7 @@ rejected_container_name   = rejeitados
 eventhub_namespace_name   = evhns-dmv2-dev-vxc02
 eventhub_name             = delivery-events
 databricks_workspace_name = dbw-dmv2-dev
-databricks_workspace_url  = adb-7405606740420312.12.azuredatabricks.net
+databricks_workspace_url  = adb-7405608830882565.5.azuredatabricks.net
 grafana_name              = grafana-dmv2-dev
 grafana_endpoint          = https://grafana-dmv2-dev-dwcaceg3ceg2c3bm.sbr.grafana.azure.com
 key_vault_name            = kv-dmv2dev-vxc02
@@ -475,44 +475,23 @@ A pipeline GitHub Actions também recebeu um job `databricks` para validar e pub
 Configuração inicial do bundle:
 
 ```text
-Workspace: adb-7405606740420312.12.azuredatabricks.net
-Catalog: dbw_dmv2_dev
-Target schema: dbw-dmv2-dev
+Workspace: https://adb-7405608830882565.5.azuredatabricks.net/
+Catalog: dbw_dmv2_dev_7405608830882565
+Target schema: dbw_dmv2_dev
 Unity Catalog: obrigatório para pipeline DLT serverless.
 ```
 
-Pré-requisito importante:
+### 14.1. Autenticação Databricks no GitHub Actions com PAT
 
-```text
-O Service Principal usado nos GitHub Secrets precisa ter acesso ao Databricks Workspace e permissão para criar/atualizar pipelines Lakeflow/DLT.
-```
+O deploy do Databricks Bundle no GitHub Actions usa autenticação por `DATABRICKS_TOKEN`.
 
-Se o GitHub Actions exibir `User not authorized` no comando `databricks current-user me`, a autenticação Azure está funcionando, mas o Service Principal ainda não foi concedido dentro do workspace Databricks. Nesse caso, adicione o Service Principal como usuário/admin do workspace Databricks antes de executar novamente o workflow.
-
-Enquanto essa permissão inicial não existir, a pipeline pula apenas o deploy do bundle Databricks e mantém Terraform e Azure Function automatizados.
-
-```text
-Databricks bundle deployment skipped.
-The Azure Service Principal is not authorized in the Databricks workspace yet.
-```
-
-### 14.1. Liberar o Service Principal do GitHub Actions no Databricks
-
-Esta etapa é obrigatória porque o GitHub Actions usa um Service Principal para publicar o bundle Databricks. Mesmo que o login no Azure funcione, o Databricks exige que esse Service Principal exista dentro do workspace e tenha `workspace-access`.
-
-Workspace usado:
+Workspace:
 
 ```text
 https://adb-7405608830882565.5.azuredatabricks.net/
 ```
 
-Application/Client ID usado:
-
-```text
-7da295f3-e9d6-4a72-9f47-8e3bde7fcc92
-```
-
-Autenticar no Databricks CLI com um usuário admin do workspace:
+Autenticar localmente no Databricks CLI, se necessário:
 
 ```powershell
 databricks auth login `
@@ -526,78 +505,197 @@ Validar o usuário logado:
 databricks current-user me --profile dbw-dmv2-dev
 ```
 
-Criar o Service Principal no workspace Databricks:
+O comando `databricks auth login` cria ou atualiza o arquivo local de configuração do Databricks CLI:
 
-```powershell
-databricks service-principals create `
-  --application-id "7da295f3-e9d6-4a72-9f47-8e3bde7fcc92" `
-  --display-name "sp-datamasterv2-github-actions" `
-  --profile DEFAULT
+```text
+C:\Users\<usuario>\.databrickscfg
 ```
 
-Exemplo de retorno esperado:
-
-```json
-{
-  "active": true,
-  "applicationId": "7da295f3-e9d6-4a72-9f47-8e3bde7fcc92",
-  "id": "144754293986021"
-}
-```
-
-Criar o arquivo de patch SCIM para conceder `workspace-access`:
+Para abrir o arquivo no Windows:
 
 ```powershell
-@'
-{
-  "schemas": [
-    "urn:ietf:params:scim:api:messages:2.0:PatchOp"
-  ],
-  "Operations": [
-    {
-      "op": "add",
-      "path": "entitlements",
-      "value": [
-        {
-          "value": "workspace-access"
-        }
-      ]
-    }
-  ]
-}
-'@ | Set-Content sp-patch.json
+notepad (Join-Path $env:USERPROFILE ".databrickscfg")
 ```
 
-Aplicar o patch no Service Principal:
+Exemplo esperado para o profile do projeto:
 
-```powershell
-databricks service-principals patch 144754293986021 --json @sp-patch.json --profile dbw-dmv2-dev
+```ini
+[dbw-dmv2-dev]
+host         = https://adb-7405608830882565.5.azuredatabricks.net
+auth_type    = databricks-cli
+account_id   = 953205e1-ba48-45aa-a0bf-77ae9a7a5240
+workspace_id = 7405608830882565
 ```
 
-Validar se o entitlement foi aplicado:
+Validar os profiles configurados:
 
 ```powershell
-databricks service-principals get 144754293986021 --profile dbw-dmv2-dev
+databricks auth profiles
 ```
 
 Resultado esperado:
 
+```text
+dbw-dmv2-dev  https://adb-7405608830882565.5.azuredatabricks.net  YES
+```
+
+Se o workspace Databricks tiver sido recriado, o `host` e o `workspace_id` podem mudar. Nesse caso, atualize o profile no `.databrickscfg`.
+
+Erro típico quando o `workspace_id` está antigo:
+
+```text
+workspace_id mismatch: provider is configured for workspace 7405608830882565 but got 7405606740420312 in provider_config
+```
+
+Correção aplicada neste projeto:
+
+```text
+workspace_id antigo: 7405606740420312
+workspace_id atual:  7405608830882565
+```
+
+Criar um token para uso no GitHub Actions:
+
+```powershell
+databricks tokens create --comment "github-actions-cicd" --lifetime-seconds 7776000 --profile dbw-dmv2-dev
+```
+
+O retorno contém `token_info` e `token_value`. O valor de `token_value` aparece uma única vez e deve ser copiado para o GitHub Secret `DATABRICKS_TOKEN`.
+
+Exemplo de retorno:
+
 ```json
 {
-  "applicationId": "7da295f3-e9d6-4a72-9f47-8e3bde7fcc92",
-  "entitlements": [
-    {
-      "value": "workspace-access"
-    }
-  ],
-  "id": "144754293986021"
+  "token_info": {
+    "comment": "github-actions-cicd",
+    "creation_time": 1779214116316,
+    "expiry_time": 1786990116316,
+    "token_id": "TOKEN_ID"
+  },
+  "token_value": "dapi..."
 }
 ```
 
-Depois disso, executar novamente o workflow `Deploy Dev` no GitHub Actions. O job Databricks deve deixar de pular o bundle e passar pelos comandos:
+Listar os secrets atuais do repositório:
+
+```powershell
+gh secret list --repo ThallysonDinizdebrito/DataMasterV2
+```
+
+Cadastrar o token no GitHub Actions:
+
+```powershell
+gh secret set DATABRICKS_TOKEN --body "<TOKEN_VALUE>" --repo ThallysonDinizdebrito/DataMasterV2
+```
+
+Validar se o secret foi criado:
+
+```powershell
+gh secret list --repo ThallysonDinizdebrito/DataMasterV2
+```
+
+Resultado esperado:
+
+```text
+DATABRICKS_TOKEN
+```
+
+### 14.2. Automação completa do deploy Databricks no GitHub Actions
+
+Para a Action funcionar de primeira, o GitHub Actions precisa receber duas credenciais por GitHub Secrets:
+
+```text
+DATABRICKS_TOKEN
+STORAGE_ACCOUNT_KEY
+```
+
+O secret `DATABRICKS_TOKEN` autentica o Databricks CLI no workspace.
+
+O secret `STORAGE_ACCOUNT_KEY` é usado pelo Databricks Bundle para preencher a variável:
+
+```text
+BUNDLE_VAR_storage_account_key
+```
+
+Essa variável alimenta a configuração Spark da pipeline:
+
+```yaml
+spark.hadoop.fs.azure.account.key.stdmv2devvxc02.dfs.core.windows.net: ${var.storage_account_key}
+```
+
+Motivo: neste projeto, o placeholder `{{secrets/dmv2-dev/storage-account-key}}` não foi resolvido corretamente no Spark config da pipeline DLT serverless e causou o erro:
+
+```text
+Invalid configuration value detected for fs.azure.account.key
+```
+
+Por isso, a forma funcional adotada é injetar a Storage Account Key pelo GitHub Actions como variável de bundle.
+
+Cadastrar a Storage Account Key no GitHub Actions:
+
+```powershell
+$key = (az storage account keys list --resource-group rg-dmv2-dev --account-name stdmv2devvxc02 --query "[0].value" -o tsv).Trim()
+gh secret set STORAGE_ACCOUNT_KEY --body $key --repo ThallysonDinizdebrito/DataMasterV2
+```
+
+Validar secrets obrigatórios:
+
+```powershell
+gh secret list --repo ThallysonDinizdebrito/DataMasterV2
+```
+
+Resultado esperado:
+
+```text
+DATABRICKS_TOKEN
+STORAGE_ACCOUNT_KEY
+```
+
+O job Databricks do workflow `Deploy Dev` deve exportar as variáveis:
+
+```yaml
+env:
+  DATABRICKS_HOST: https://adb-7405608830882565.5.azuredatabricks.net/
+  DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+  BUNDLE_VAR_storage_account_key: ${{ secrets.STORAGE_ACCOUNT_KEY }}
+```
+
+E deve executar o bundle dentro da pasta `lakeflow`:
 
 ```bash
 databricks current-user me
 databricks bundle validate -t dev
 databricks bundle deploy -t dev
+databricks bundle summary -t dev
+databricks bundle run delivery_eventhub_medallion_v2 -t dev
 ```
+
+Exemplo de step:
+
+```yaml
+- name: Deploy Databricks Lakeflow Bundle
+  working-directory: lakeflow
+  env:
+    DATABRICKS_HOST: https://adb-7405608830882565.5.azuredatabricks.net/
+    DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+    BUNDLE_VAR_storage_account_key: ${{ secrets.STORAGE_ACCOUNT_KEY }}
+  run: |
+    databricks current-user me
+    databricks bundle validate -t dev
+    databricks bundle deploy -t dev
+    databricks bundle summary -t dev
+    databricks bundle run delivery_eventhub_medallion_v2 -t dev
+```
+
+Checklist antes de rodar a Action:
+
+```text
+1. Workspace Databricks existe e host está correto no lakeflow/databricks.yml.
+2. GitHub Secret DATABRICKS_TOKEN existe e não expirou.
+3. GitHub Secret STORAGE_ACCOUNT_KEY existe e corresponde ao storage stdmv2devvxc02.
+4. O workflow executa os comandos Databricks com working-directory: lakeflow.
+5. O workflow exporta BUNDLE_VAR_storage_account_key usando secrets.STORAGE_ACCOUNT_KEY.
+6. O workflow executa databricks bundle run delivery_eventhub_medallion_v2 -t dev após o deploy.
+```
+
+Depois que esses secrets existem no GitHub, não é necessário preparar nada manualmente no computador local para o deploy via Action. Os comandos locais com `$env:BUNDLE_VAR_storage_account_key` são apenas para teste manual no PowerShell.

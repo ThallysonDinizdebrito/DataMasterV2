@@ -229,6 +229,7 @@ jobs:
     env:
       DATABRICKS_HOST: https://adb-7405608830882565.5.azuredatabricks.net/
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      BUNDLE_VAR_storage_account_key: ${{ secrets.STORAGE_ACCOUNT_KEY }}
 
     steps:
       - name: Checkout repository
@@ -258,3 +259,7 @@ jobs:
       - name: Bundle Deploy Summary
         working-directory: lakeflow
         run: databricks bundle summary -t dev
+
+      - name: Start Databricks DLT Pipeline
+        working-directory: lakeflow
+        run: databricks bundle run delivery_eventhub_medallion_v2 -t dev
