@@ -263,3 +263,139 @@ jobs:
       - name: Start Databricks DLT Pipeline
         working-directory: lakeflow
         run: databricks bundle run delivery_eventhub_medallion_v2 -t dev
+
+
+# ============================================================
+  # JOB 5: Validação pós-run das tabelas Bronze/Silver/Gold
+  # ============================================================
+  validate-pipeline:
+    name: Validate Pipeline Tables
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: databricks
+
+    env:
+      DATABRICKS_HOST: https://adb-7405608830882565.5.azuredatabricks.net/
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      WAREHOUSE_ID: cd1e00488549c535
+      CATALOG: dbw_dmv2_dev_7405608830882565
+      SCHEMA: default
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Databricks CLI
+        uses: databricks/setup-cli@main
+
+      - name: Validate Bronze Tables
+        run: |
+          FAILED=0
+
+          for TABLE in bronze_delivery_batches bronze_eventhub_capture_raw; do
+            echo "🔍 Checking $TABLE..."
+            RESULT=$(databricks sql execute \
+              --warehouse-id $WAREHOUSE_ID \
+              --wait-timeout 60s \
+              --statement "SELECT COUNT(*) as total FROM $CATALOG.$SCHEMA.$TABLE" 2>&1)
+
+            echo "$RESULT"
+
+            COUNT=$(echo "$RESULT" | grep -oP '"total",\s*"\K[0-9]+' || echo "0")
+
+            if [ "$COUNT" = "0" ] || [ -z "$COUNT" ]; then
+              echo "❌ $TABLE is EMPTY or failed!"
+              echo "BRONZE_${TABLE}=FAIL" >> $GITHUB_ENV
+              FAILED=1
+            else
+              echo "✅ $TABLE has $COUNT rows."
+              echo "BRONZE_${TABLE}=OK ($COUNT rows)" >> $GITHUB_ENV
+            fi
+          done
+
+          [ $FAILED -eq 1 ] && exit 1 || echo "✅ All Bronze tables OK."
+
+      - name: Validate Silver Tables
+        run: |
+          FAILED=0
+
+          for TABLE in silver_clientes silver_drivers silver_items silver_order_items silver_orders silver_restaurantes; do
+            echo "🔍 Checking $TABLE..."
+            RESULT=$(databricks sql execute \
+              --warehouse-id $WAREHOUSE_ID \
+              --wait-timeout 60s \
+              --statement "SELECT COUNT(*) as total FROM $CATALOG.$SCHEMA.$TABLE" 2>&1)
+
+            echo "$RESULT"
+
+            COUNT=$(echo "$RESULT" | grep -oP '"total",\s*"\K[0-9]+' || echo "0")
+
+            if [ "$COUNT" = "0" ] || [ -z "$COUNT" ]; then
+              echo "❌ $TABLE is EMPTY or failed!"
+              echo "SILVER_${TABLE}=FAIL" >> $GITHUB_ENV
+              FAILED=1
+            else
+              echo "✅ $TABLE has $COUNT rows."
+              echo "SILVER_${TABLE}=OK ($COUNT rows)" >> $GITHUB_ENV
+            fi
+          done
+
+          [ $FAILED -eq 1 ] && exit 1 || echo "✅ All Silver tables OK."
+
+      - name: Validate Gold Tables
+        run: |
+          FAILED=0
+
+          for TABLE in gold_daily_delivery_kpis gold_item_category_metrics gold_restaurant_performance; do
+            echo "🔍 Checking $TABLE..."
+            RESULT=$(databricks sql execute \
+              --warehouse-id $WAREHOUSE_ID \
+              --wait-timeout 60s \
+              --statement "SELECT COUNT(*) as total FROM $CATALOG.$SCHEMA.$TABLE" 2>&1)
+
+            echo "$RESULT"
+
+            COUNT=$(echo "$RESULT" | grep -oP '"total",\s*"\K[0-9]+' || echo "0")
+
+            if [ "$COUNT" = "0" ] || [ -z "$COUNT" ]; then
+              echo "❌ $TABLE is EMPTY or failed!"
+              echo "GOLD_${TABLE}=FAIL" >> $GITHUB_ENV
+              FAILED=1
+            else
+              echo "✅ $TABLE has $COUNT rows."
+              echo "GOLD_${TABLE}=OK ($COUNT rows)" >> $GITHUB_ENV
+            fi
+          done
+
+          [ $FAILED -eq 1 ] && exit 1 || echo "✅ All Gold tables OK."
+
+      - name: Summary Report
+        if: always()
+        run: |
+          echo "## 📊 Validação das Tabelas Pós-Pipeline" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### 🥉 Bronze" >> $GITHUB_STEP_SUMMARY
+          echo "| Tabela | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| bronze_delivery_batches | ${BRONZE_bronze_delivery_batches:-❌ FAIL} |" >> $GITHUB_STEP_SUMMARY
+          echo "| bronze_eventhub_capture_raw | ${BRONZE_bronze_eventhub_capture_raw:-❌ FAIL} |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🥈 Silver" >> $GITHUB_STEP_SUMMARY
+          echo "| Tabela | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| silver_clientes | ${SILVER_silver_clientes:-❌ FAIL} |" >> $GITHUB_STEP_SUMMARY
+          echo "| silver_drivers | ${SILVER_silver_drivers:-❌ FAIL} |" >> $GITHUB_STEP_SUMMARY
+          echo "| silver_items | ${SILVER_silver_items:-❌ FAIL} |" >> $GITHUB_STEP_SUMMARY
+          echo "| silver_order_items | ${SILVER_silver_order_items:-❌ FAIL} |" >> $GITHUB_STEP_SUMMARY
+          echo "| silver_orders | ${SILVER_silver_orders:-❌ FAIL} |" >> $GITHUB_STEP_SUMMARY
+          echo "| silver_restaurantes | ${SILVER_silver_restaurantes:-❌ FAIL} |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🥇 Gold" >> $GITHUB_STEP_SUMMARY
+          echo "| Tabela | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| gold_daily_delivery_kpis | ${GOLD_gold_daily_delivery_kpis:-❌ FAIL} |" >> $GITHUB_STEP_SUMMARY
+          echo "| gold_item_category_metrics | ${GOLD_gold_item_category_metrics:-❌ FAIL} |" >> $GITHUB_STEP_SUMMARY
+          echo "| gold_restaurant_performance | ${GOLD_gold_restaurant_performance:-❌ FAIL} |" >> $GITHUB_STEP_SUMMARY
