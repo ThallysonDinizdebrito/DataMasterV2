@@ -35,7 +35,8 @@ provider "azurerm" {
 }
 
 provider "databricks" {
-  host = var.databricks_host
+  host  = var.databricks_host
+  token = var.databricks_token
 }
 
 data "azurerm_client_config" "current" {}

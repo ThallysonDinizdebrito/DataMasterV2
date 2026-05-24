@@ -108,8 +108,7 @@ jobs:
       TF_VAR_enable_unity_catalog: true
       TF_VAR_unity_catalog_metastore_id: ""
       TF_VAR_databricks_host: https://adb-7405608830882565.5.azuredatabricks.net/
-      DATABRICKS_HOST: https://adb-7405608830882565.5.azuredatabricks.net/
-      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      TF_VAR_databricks_token: ${{ secrets.DATABRICKS_TOKEN }}
       TF_VAR_function_schedule: "0 */1 * * * *"
       TF_VAR_fake_num_clientes: 1
       TF_VAR_fake_num_restaurantes: 1

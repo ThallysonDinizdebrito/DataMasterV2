@@ -51,6 +51,13 @@ variable "databricks_host" {
   default     = ""
 }
 
+variable "databricks_token" {
+  description = "Databricks PAT used by the Terraform Databricks provider."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
 variable "databricks_sku" {
   description = "Databricks workspace SKU."
   type        = string
