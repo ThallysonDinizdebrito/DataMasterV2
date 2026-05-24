@@ -19,7 +19,7 @@ resource "databricks_secret_scope" "main" {
 }
 
 resource "databricks_cluster" "jobs" {
-  count                   = var.databricks_host == "" ? 0 : 1
+  count                   = var.databricks_host != "" && var.enable_databricks_jobs_cluster ? 1 : 0
   cluster_name            = "dbc-${local.name_prefix}-jobs"
   spark_version           = "15.4.x-photon-scala2.12"
   node_type_id            = "Standard_DS3_v2"

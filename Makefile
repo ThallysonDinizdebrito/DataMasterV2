@@ -78,19 +78,19 @@ databricks-auth:
 
 .PHONY: databricks-validate
 databricks-validate:
-	databricks bundle validate -t $(ENV) --var="storage_account_key=$$env:BUNDLE_VAR_storage_account_key" --config-file $(LAKEFLOW_DIR)/databricks.yml
+	databricks bundle validate -t $(ENV) --config-file $(LAKEFLOW_DIR)/databricks.yml
 
 .PHONY: databricks-deploy
 databricks-deploy:
-	databricks bundle deploy -t $(ENV) --var="storage_account_key=$$env:BUNDLE_VAR_storage_account_key" --config-file $(LAKEFLOW_DIR)/databricks.yml
+	databricks bundle deploy -t $(ENV) --config-file $(LAKEFLOW_DIR)/databricks.yml
 
 .PHONY: databricks-summary
 databricks-summary:
-	databricks bundle summary -t $(ENV) --var="storage_account_key=$$env:BUNDLE_VAR_storage_account_key" --config-file $(LAKEFLOW_DIR)/databricks.yml
+	databricks bundle summary -t $(ENV) --config-file $(LAKEFLOW_DIR)/databricks.yml
 
 .PHONY: databricks-run
 databricks-run:
-	databricks bundle run $(PIPELINE_RESOURCE) -t $(ENV) --var="storage_account_key=$$env:BUNDLE_VAR_storage_account_key" --config-file $(LAKEFLOW_DIR)/databricks.yml
+	databricks bundle run $(PIPELINE_RESOURCE) -t $(ENV) --config-file $(LAKEFLOW_DIR)/databricks.yml
 
 .PHONY: secrets-list
 secrets-list:

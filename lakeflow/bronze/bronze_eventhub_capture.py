@@ -77,7 +77,7 @@ def bronze_eventhub_capture_raw():
             F.col("EnqueuedTimeUtc").cast("timestamp").alias("enqueued_time_utc"),
             F.col("SystemProperties").alias("system_properties"),
             F.col("Properties").alias("event_properties"),
-            F.col("Body").cast("string").alias("body_json"),
+            F.col("Body").cast("binary").cast("string").alias("body_json"),
             F.col("_metadata.file_path").alias("source_file"),
             F.col("_metadata.file_modification_time").alias("source_file_modification_time"),
             F.current_timestamp().alias("bronze_ingestion_time")

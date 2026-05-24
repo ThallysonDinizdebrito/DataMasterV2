@@ -602,22 +602,22 @@ DATABRICKS_TOKEN
 
 ### 14.2. Automação completa do deploy Databricks no GitHub Actions
 
-Para a Action funcionar de primeira, o GitHub Actions precisa receber duas credenciais por GitHub Secrets:
+Após a migração para Unity Catalog External Location, a Action precisa do GitHub Secret:
 
 ```text
 DATABRICKS_TOKEN
-STORAGE_ACCOUNT_KEY
 ```
 
 O secret `DATABRICKS_TOKEN` autentica o Databricks CLI no workspace.
 
-O secret `STORAGE_ACCOUNT_KEY` é usado pelo Databricks Bundle para preencher a variável:
+O secret `STORAGE_ACCOUNT_KEY` foi usado temporariamente no MVP, mas não é mais necessário para o deploy Databricks após a migração para External Location.
 
 ```text
-BUNDLE_VAR_storage_account_key
+Storage Account Key via Spark config = removido
+External Location via Unity Catalog   = padrão atual
 ```
 
-Essa variável alimenta a configuração Spark da pipeline:
+Configuração removida do bundle:
 
 ```yaml
 spark.hadoop.fs.azure.account.key.stdmv2devvxc02.dfs.core.windows.net: ${var.storage_account_key}
@@ -629,14 +629,7 @@ Motivo: neste projeto, o placeholder `{{secrets/dmv2-dev/storage-account-key}}` 
 Invalid configuration value detected for fs.azure.account.key
 ```
 
-Por isso, a forma funcional adotada é injetar a Storage Account Key pelo GitHub Actions como variável de bundle.
-
-Cadastrar a Storage Account Key no GitHub Actions:
-
-```powershell
-$key = (az storage account keys list --resource-group rg-dmv2-dev --account-name stdmv2devvxc02 --query "[0].value" -o tsv).Trim()
-gh secret set STORAGE_ACCOUNT_KEY --body $key --repo ThallysonDinizdebrito/DataMasterV2
-```
+Essa solução foi usada para destravar o MVP. Após validação no lab `DataMasterV2-UCLab`, o projeto principal foi migrado para usar Unity Catalog External Location com Managed Identity.
 
 Validar secrets obrigatórios:
 
@@ -648,7 +641,6 @@ Resultado esperado:
 
 ```text
 DATABRICKS_TOKEN
-STORAGE_ACCOUNT_KEY
 ```
 
 O job Databricks do workflow `Deploy Dev` deve exportar as variáveis:
@@ -657,7 +649,6 @@ O job Databricks do workflow `Deploy Dev` deve exportar as variáveis:
 env:
   DATABRICKS_HOST: https://adb-7405608830882565.5.azuredatabricks.net/
   DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-  BUNDLE_VAR_storage_account_key: ${{ secrets.STORAGE_ACCOUNT_KEY }}
 ```
 
 E deve executar o bundle dentro da pasta `lakeflow`:
@@ -678,7 +669,6 @@ Exemplo de step:
   env:
     DATABRICKS_HOST: https://adb-7405608830882565.5.azuredatabricks.net/
     DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-    BUNDLE_VAR_storage_account_key: ${{ secrets.STORAGE_ACCOUNT_KEY }}
   run: |
     databricks current-user me
     databricks bundle validate -t dev
@@ -687,18 +677,18 @@ Exemplo de step:
     databricks bundle run delivery_eventhub_medallion_v2 -t dev
 ```
 
-Checklist antes de rodar a Action:
+Checklist antes de rodar a Action após migração para External Location:
 
 ```text
 1. Workspace Databricks existe e host está correto no lakeflow/databricks.yml.
 2. GitHub Secret DATABRICKS_TOKEN existe e não expirou.
-3. GitHub Secret STORAGE_ACCOUNT_KEY existe e corresponde ao storage stdmv2devvxc02.
+3. External Location extloc_dmv2_source_lab existe e aponta para o storage stdmv2devvxc02.
 4. O workflow executa os comandos Databricks com working-directory: lakeflow.
-5. O workflow exporta BUNDLE_VAR_storage_account_key usando secrets.STORAGE_ACCOUNT_KEY.
+5. O workflow não exporta mais BUNDLE_VAR_storage_account_key.
 6. O workflow executa databricks bundle run delivery_eventhub_medallion_v2 -t dev após o deploy.
 ```
 
-Depois que esses secrets existem no GitHub, não é necessário preparar nada manualmente no computador local para o deploy via Action. Os comandos locais com `$env:BUNDLE_VAR_storage_account_key` são apenas para teste manual no PowerShell.
+Depois da migração, não é necessário preparar `$env:BUNDLE_VAR_storage_account_key` no computador local para validar ou fazer deploy do bundle. O acesso ao ADLS ocorre via Unity Catalog External Location.
 
 ### 14.3. Papel do Makefile no projeto
 

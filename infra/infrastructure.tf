@@ -125,6 +125,10 @@ resource "azurerm_key_vault" "main" {
       "Delete"
     ]
   }
+
+  lifecycle {
+    ignore_changes = [access_policy]
+  }
 }
 
 resource "azurerm_log_analytics_workspace" "main" {

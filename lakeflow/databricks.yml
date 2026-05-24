@@ -4,7 +4,7 @@ bundle:
 variables:
   catalog:
     description: Unity Catalog catalog name
-    default: dbw_dmv2_dev_7405608830882565
+    default: delivery_datamaster
 
              
   schema:
@@ -15,9 +15,6 @@ variables:
     description: Event Hub Capture AVRO source path
     default: abfss://source@stdmv2devvxc02.dfs.core.windows.net/eventhub-capture
 
-  storage_account_key:
-    description: Storage account key for ADLS Gen2 source access
-
 targets:
   dev:
     mode: development
@@ -25,7 +22,7 @@ targets:
     workspace:
       host: https://adb-7405608830882565.5.azuredatabricks.net/
     variables:
-      catalog: dbw_dmv2_dev_7405608830882565
+      catalog: delivery_datamaster
       schema: default
       source_path: abfss://source@stdmv2devvxc02.dfs.core.windows.net/eventhub-capture
 
@@ -45,7 +42,6 @@ resources:
         source_path: ${var.source_path}
         catalog_name: ${var.catalog}
         schema_name: ${var.schema}
-        spark.hadoop.fs.azure.account.key.stdmv2devvxc02.dfs.core.windows.net: ${var.storage_account_key}
 
 
       libraries:
