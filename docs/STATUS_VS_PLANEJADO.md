@@ -558,11 +558,11 @@ A próxima etapa deve ser transformar o MVP funcional em uma versão mais profis
 Ordem recomendada:
 
 ```text
-1. Consolidar commit final do estado atual.
+1. Consolidar commit final do estado atual. OK 
 2. Validar contagens e qualidade das tabelas Bronze/Silver/Gold.
-3. Criar validação pós-run no GitHub Actions.
-4. Implementar Unity Catalog com catálogo, schemas e grants.
-5. Migrar acesso ADLS de Storage Account Key para External Location.
+3. Criar validação pós-run no GitHub Actions. (criar um action com validação apos rum)
+4. Implementar Unity Catalog com catálogo, schemas e grants. OK
+5. Migrar acesso ADLS de Storage Account Key para External Location. OK
 6. Melhorar Azure Function com dados mais ricos e parametrizados.
 7. Criar dashboards Grafana de negócio e infraestrutura.
 8. Adicionar alertas.
@@ -597,4 +597,83 @@ Key Vault
 Observabilidade com alertas
 AI Functions
 Rede segura
+```
+
+## 8. Próximo incremento - Observabilidade de custos no Databricks
+
+Foi adicionada a base para uma frente de FinOps dentro do Databricks.
+
+Objetivo:
+
+```text
+Azure Cost Management API
+  -> Databricks job
+  -> Unity Catalog
+  -> Tabelas Delta de custo
+  -> Dashboard de acompanhamento
+```
+
+Arquivos adicionados/alterados:
+
+```text
+lakeflow/observability/azure_cost_ingestion.py
+lakeflow/databricks.yml
+```
+
+Job Databricks criado no bundle:
+
+```text
+azure_cost_observability
+```
+
+Tabelas planejadas:
+
+```text
+delivery_datamaster.observability.azure_cost_by_resource_daily
+delivery_datamaster.observability.azure_cost_summary_daily
+```
+
+O job busca os últimos 30 dias de custo real na Azure Cost Management API, agrupado por:
+
+```text
+data
+resource_id
+resource_type
+resource_group
+service_name
+meter_category
+meter_subcategory
+currency
+```
+
+O schedule foi criado como `PAUSED` para evitar custo automático. A execução pode ser feita manualmente pelo Databricks ou via:
+
+```powershell
+databricks bundle run azure_cost_observability -t dev
+```
+
+Pré-requisitos para funcionar:
+
+```text
+1. O Service Principal precisa ter permissão Cost Management Reader ou Reader na subscription.
+2. O client secret do Service Principal precisa existir em um Databricks Secret Scope.
+3. Secret scope esperado: dmv2-dev
+4. Secret key esperada: azure-client-secret
+```
+
+Comando de exemplo para criar o secret no Databricks:
+
+```powershell
+databricks secrets put-secret dmv2-dev azure-client-secret --profile dbw-dmv2-dev
+```
+
+Depois de executar o job, o dashboard pode usar as tabelas de observabilidade para acompanhar:
+
+```text
+custo diário total
+custo por resource group
+custo por tipo de recurso
+custo por serviço Azure
+ranking dos recursos mais caros
+variação de custo nos últimos 7/30 dias
 ```

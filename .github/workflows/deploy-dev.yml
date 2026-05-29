@@ -249,8 +249,8 @@ jobs:
         working-directory: lakeflow
         run: databricks bundle summary -t dev
 
-      - name: Start Databricks DLT Pipeline
-        working-directory: lakeflow
-        run: databricks bundle run delivery_eventhub_medallion_v2 -t dev
+      # - name: Start Databricks DLT Pipeline
+      #   working-directory: lakeflow
+      #   run: databricks bundle run delivery_eventhub_medallion_v2 -t dev
 
 

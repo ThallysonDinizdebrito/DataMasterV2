@@ -16,6 +16,11 @@ param(
 
     [string]$Branch = "dev",
 
+    [ValidateSet("Branch", "Environment")]
+    [string]$EntityType = "Environment",
+
+    [string]$EnvironmentName = "dev",
+
     [string]$CredentialName = "github-actions-dev-oidc",
 
     [string]$RoleScope = ""
@@ -42,7 +47,14 @@ if (-not $AppObjectId) {
     throw "App Registration not found for AzureClientId '$AzureClientId'."
 }
 
-$Subject = "repo:$GitHubOrg/$GitHubRepo:ref:refs/heads/$Branch"
+if ($EntityType -eq "Environment") {
+    $Subject = "repo:${GitHubOrg}/${GitHubRepo}:environment:${EnvironmentName}"
+    $CredentialDescription = "GitHub Actions OIDC for ${GitHubOrg}/${GitHubRepo} environment ${EnvironmentName}"
+}
+else {
+    $Subject = "repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/${Branch}"
+    $CredentialDescription = "GitHub Actions OIDC for ${GitHubOrg}/${GitHubRepo} branch ${Branch}"
+}
 
 Write-Host "Checking existing federated credentials..."
 $ExistingCredential = az ad app federated-credential list `
@@ -59,7 +71,7 @@ else {
         name        = $CredentialName
         issuer      = "https://token.actions.githubusercontent.com"
         subject     = $Subject
-        description = "GitHub Actions OIDC for $GitHubOrg/$GitHubRepo branch $Branch"
+        description = $CredentialDescription
         audiences   = @("api://AzureADTokenExchange")
     } | ConvertTo-Json -Depth 10
 

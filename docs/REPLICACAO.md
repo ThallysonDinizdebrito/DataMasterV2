@@ -690,6 +690,75 @@ Checklist antes de rodar a Action após migração para External Location:
 
 Depois da migração, não é necessário preparar `$env:BUNDLE_VAR_storage_account_key` no computador local para validar ou fazer deploy do bundle. O acesso ao ADLS ocorre via Unity Catalog External Location.
 
+### 14.2.1. Autenticação Azure do GitHub Actions via OIDC
+
+O projeto usa GitHub OIDC para autenticar no Azure sem `AZURE_CLIENT_SECRET`.
+
+O fluxo atual é:
+
+```text
+GitHub Actions
+-> OIDC token temporário
+-> Azure Entra ID
+-> Service Principal
+-> Azure subscription
+```
+
+Secrets/identificadores necessários no GitHub:
+
+```text
+AZURE_CLIENT_ID
+AZURE_TENANT_ID
+AZURE_SUBSCRIPTION_ID
+DATABRICKS_TOKEN
+```
+
+O secret `AZURE_CLIENT_SECRET` não é mais necessário.
+
+Antes de executar o bootstrap local, autenticar no Azure CLI com usuário:
+
+```powershell
+az login
+```
+
+Se o login interativo falhar por MFA, usar device code:
+
+```powershell
+az login --tenant 1d1e1d50-bb96-44f7-81ad-10c6e41d1e6d --use-device-code
+```
+
+Validar que o CLI está usando usuário, não Service Principal:
+
+```powershell
+az account show
+```
+
+Resultado esperado:
+
+```text
+user.type = user
+```
+
+Criar a Federated Credential via script:
+
+```powershell
+.\scripts\setup-github-oidc.ps1 `
+  -AzureClientId "<AZURE_CLIENT_ID>" `
+  -AzureTenantId "1d1e1d50-bb96-44f7-81ad-10c6e41d1e6d" `
+  -AzureSubscriptionId "97eb265c-59ce-4122-bbe4-98f0d58d9208" `
+  -GitHubOrg "ThallysonDinizdebrito" `
+  -GitHubRepo "DataMasterV2" `
+  -EntityType Environment `
+  -EnvironmentName "dev" `
+  -CredentialName "github-actions-dev-environment-oidc"
+```
+
+Subject esperado no Entra ID:
+
+```text
+repo:ThallysonDinizdebrito/DataMasterV2:environment:dev
+```
+
 ### 14.3. Papel do Makefile no projeto
 
 O `Makefile` não substitui o GitHub Actions e não altera o workflow automaticamente.

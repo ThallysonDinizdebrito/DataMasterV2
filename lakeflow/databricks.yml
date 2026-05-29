@@ -15,6 +15,30 @@ variables:
     description: Event Hub Capture AVRO source path
     default: abfss://source@stdmv2devvxc02.dfs.core.windows.net/eventhub-capture
 
+  azure_tenant_id:
+    description: Azure tenant ID used by the Azure Cost Management ingestion job
+    default: 1d1e1d50-bb96-44f7-81ad-10c6e41d1e6d
+
+  azure_client_id:
+    description: Azure client ID used by the Azure Cost Management ingestion job
+    default: 7da295f3-e9d6-4a72-9f47-8e3bde7fcc92
+
+  azure_subscription_id:
+    description: Azure subscription ID used by the Azure Cost Management ingestion job
+    default: 97eb265c-59ce-4122-bbe4-98f0d58d9208
+
+  cost_schema:
+    description: Target schema for Azure cost observability tables
+    default: observability
+
+  cost_secret_scope:
+    description: Databricks secret scope containing the Azure client secret
+    default: dmv2-dev
+
+  cost_secret_key:
+    description: Databricks secret key containing the Azure client secret
+    default: azure-client-secret
+
 targets:
   dev:
     mode: development
@@ -25,6 +49,12 @@ targets:
       catalog: delivery_datamaster
       schema: default
       source_path: abfss://source@stdmv2devvxc02.dfs.core.windows.net/eventhub-capture
+      azure_tenant_id: 1d1e1d50-bb96-44f7-81ad-10c6e41d1e6d
+      azure_client_id: 7da295f3-e9d6-4a72-9f47-8e3bde7fcc92
+      azure_subscription_id: 97eb265c-59ce-4122-bbe4-98f0d58d9208
+      cost_schema: observability
+      cost_secret_scope: dmv2-dev
+      cost_secret_key: azure-client-secret
 
 resources:
   pipelines:
@@ -51,3 +81,42 @@ resources:
             path: ./silver/silver_delivery_entities.py
         - file:
             path: ./gold/gold_delivery_metrics.py
+
+  jobs:
+    azure_cost_observability:
+      name: job-dmv2-azure-cost-observability
+      schedule:
+        quartz_cron_expression: "0 0 8 * * ?"
+        timezone_id: America/Sao_Paulo
+        pause_status: PAUSED
+      tasks:
+        - task_key: ingest_azure_costs
+          spark_python_task:
+            python_file: ./observability/azure_cost_ingestion.py
+            parameters:
+              - --tenant-id
+              - ${var.azure_tenant_id}
+              - --client-id
+              - ${var.azure_client_id}
+              - --subscription-id
+              - ${var.azure_subscription_id}
+              - --catalog
+              - ${var.catalog}
+              - --schema
+              - ${var.cost_schema}
+              - --secret-scope
+              - ${var.cost_secret_scope}
+              - --secret-key
+              - ${var.cost_secret_key}
+              - --lookback-days
+              - "30"
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            node_type_id: Standard_D4s_v3
+            driver_node_type_id: Standard_D4s_v3
+            num_workers: 0
+            spark_conf:
+              spark.databricks.cluster.profile: singleNode
+              spark.master: local[*]
+            custom_tags:
+              ResourceClass: SingleNode
