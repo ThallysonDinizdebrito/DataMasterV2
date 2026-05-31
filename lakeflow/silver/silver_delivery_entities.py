@@ -5,7 +5,12 @@ from pyspark.sql import functions as F
 @dlt.table(
     name="silver_clientes",
     comment="Cleaned client dimension extracted from delivery generator batches.",
-    table_properties={"quality": "silver", "entity": "clientes"}
+    table_properties={
+        "quality": "silver",
+        "entity": "clientes",
+        "delta.autoOptimize.optimizeWrite": "true",
+        "delta.autoOptimize.autoCompact": "true"
+    }
 )
 @dlt.expect_or_drop("valid_client_id", "client_id IS NOT NULL")
 @dlt.expect_or_drop("valid_cpf", "cpf IS NOT NULL")
@@ -30,7 +35,12 @@ def silver_clientes():
 @dlt.table(
     name="silver_restaurantes",
     comment="Cleaned restaurant dimension extracted from delivery generator batches.",
-    table_properties={"quality": "silver", "entity": "restaurantes"}
+    table_properties={
+        "quality": "silver",
+        "entity": "restaurantes",
+        "delta.autoOptimize.optimizeWrite": "true",
+        "delta.autoOptimize.autoCompact": "true"
+    }
 )
 @dlt.expect_or_drop("valid_merchant_id", "merchant_id IS NOT NULL")
 @dlt.expect_or_drop("valid_cnpj", "cnpj IS NOT NULL")
@@ -54,7 +64,12 @@ def silver_restaurantes():
 @dlt.table(
     name="silver_drivers",
     comment="Cleaned driver dimension extracted from delivery generator batches.",
-    table_properties={"quality": "silver", "entity": "drivers"}
+    table_properties={
+        "quality": "silver",
+        "entity": "drivers",
+        "delta.autoOptimize.optimizeWrite": "true",
+        "delta.autoOptimize.autoCompact": "true"
+    }
 )
 @dlt.expect_or_drop("valid_driver_id", "driver_id IS NOT NULL")
 @dlt.expect_or_drop("valid_plate", "placa IS NOT NULL")
@@ -79,7 +94,12 @@ def silver_drivers():
 @dlt.table(
     name="silver_items",
     comment="Cleaned menu item dimension extracted from delivery generator batches.",
-    table_properties={"quality": "silver", "entity": "items"}
+    table_properties={
+        "quality": "silver",
+        "entity": "items",
+        "delta.autoOptimize.optimizeWrite": "true",
+        "delta.autoOptimize.autoCompact": "true"
+    }
 )
 @dlt.expect_or_drop("valid_item_id", "item_id IS NOT NULL")
 @dlt.expect_or_drop("valid_price", "preco > 0")
@@ -104,7 +124,14 @@ def silver_items():
 @dlt.table(
     name="silver_orders",
     comment="Cleaned order fact extracted from delivery generator batches.",
-    table_properties={"quality": "silver", "entity": "orders", "pipelines.autoOptimize.zOrderCols": "order_id,created_at"}
+    partition_cols=["order_date"],
+    cluster_by=["order_date", "restaurant_id"],
+    table_properties={
+        "quality": "silver",
+        "entity": "orders",
+        "delta.autoOptimize.optimizeWrite": "true",
+        "delta.autoOptimize.autoCompact": "true"
+    }
 )
 @dlt.expect_or_drop("valid_order_id", "order_id IS NOT NULL")
 @dlt.expect_or_drop("valid_order_amount", "valor_total > 0")
@@ -118,11 +145,13 @@ def silver_orders():
             F.col("order.PedidoID").cast("string").alias("order_id"),
             F.col("order.ClientID").cast("string").alias("client_id"),
             F.col("order.MerchantID").cast("string").alias("merchant_id"),
+            F.col("order.MerchantID").cast("string").alias("restaurant_id"),
             F.col("order.DriversID").cast("string").alias("driver_id"),
             F.col("order.quantidade_total").cast("int").alias("quantidade_total"),
             F.col("order.valor_total").cast("decimal(10,2)").alias("valor_total"),
             F.col("order.tipo_pagamento").cast("string").alias("tipo_pagamento"),
             F.col("order.created_at").cast("timestamp").alias("created_at"),
+            F.to_date(F.col("order.created_at").cast("timestamp")).alias("order_date"),
             F.col("order.Produtos").alias("produtos"),
             F.year(F.col("order.created_at").cast("timestamp")).alias("order_year"),
             F.month(F.col("order.created_at").cast("timestamp")).alias("order_month"),
@@ -140,7 +169,12 @@ def silver_orders():
 @dlt.table(
     name="silver_order_items",
     comment="Exploded order item fact extracted from nested order products.",
-    table_properties={"quality": "silver", "entity": "order_items"}
+    table_properties={
+        "quality": "silver",
+        "entity": "order_items",
+        "delta.autoOptimize.optimizeWrite": "true",
+        "delta.autoOptimize.autoCompact": "true"
+    }
 )
 @dlt.expect_or_drop("valid_order_item", "order_id IS NOT NULL AND item_id IS NOT NULL")
 @dlt.expect_or_drop("valid_item_quantity", "quantidade > 0")

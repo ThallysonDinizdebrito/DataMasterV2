@@ -5,7 +5,14 @@ from pyspark.sql import functions as F
 @dlt.table(
     name="gold_daily_delivery_kpis",
     comment="Daily delivery KPIs for dashboard and operational monitoring.",
-    table_properties={"quality": "gold", "domain": "delivery_analytics"}
+    partition_cols=["metric_date"],
+    cluster_by=["metric_date"],
+    table_properties={
+        "quality": "gold",
+        "domain": "delivery_analytics",
+        "delta.autoOptimize.optimizeWrite": "true",
+        "delta.autoOptimize.autoCompact": "true"
+    }
 )
 @dlt.expect_or_fail("non_negative_orders", "total_orders >= 0")
 @dlt.expect_or_fail("non_negative_revenue", "total_revenue >= 0")
@@ -15,7 +22,7 @@ def gold_daily_delivery_kpis():
     return (
         orders
         .groupBy(
-            F.to_date("created_at").alias("order_date"),
+            F.to_date("created_at").alias("metric_date"),
             F.col("tipo_pagamento")
         )
         .agg(
@@ -34,7 +41,13 @@ def gold_daily_delivery_kpis():
 @dlt.table(
     name="gold_restaurant_performance",
     comment="Restaurant performance metrics based on generated delivery orders.",
-    table_properties={"quality": "gold", "domain": "restaurant_analytics"}
+    cluster_by=["restaurant_id"],
+    table_properties={
+        "quality": "gold",
+        "domain": "restaurant_analytics",
+        "delta.autoOptimize.optimizeWrite": "true",
+        "delta.autoOptimize.autoCompact": "true"
+    }
 )
 @dlt.expect_or_fail("positive_restaurant_orders", "total_orders > 0")
 def gold_restaurant_performance():
@@ -46,7 +59,7 @@ def gold_restaurant_performance():
         .join(restaurants.alias("r"), F.col("o.merchant_id") == F.col("r.merchant_id"), "left")
         .groupBy(
             F.to_date(F.col("o.created_at")).alias("order_date"),
-            F.col("o.merchant_id"),
+            F.col("o.merchant_id").alias("restaurant_id"),
             F.col("r.nome").alias("restaurant_name")
         )
         .agg(
@@ -62,7 +75,12 @@ def gold_restaurant_performance():
 @dlt.table(
     name="gold_item_category_metrics",
     comment="Item category metrics calculated from exploded order items.",
-    table_properties={"quality": "gold", "domain": "menu_analytics"}
+    table_properties={
+        "quality": "gold",
+        "domain": "menu_analytics",
+        "delta.autoOptimize.optimizeWrite": "true",
+        "delta.autoOptimize.autoCompact": "true"
+    }
 )
 @dlt.expect_or_fail("positive_quantity", "total_quantity > 0")
 def gold_item_category_metrics():

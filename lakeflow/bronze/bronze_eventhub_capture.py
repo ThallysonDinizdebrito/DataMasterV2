@@ -62,7 +62,13 @@ payload_schema = StructType([
 @dlt.table(
     name="bronze_eventhub_capture_raw",
     comment="Raw AVRO records captured by Azure Event Hub Capture from delivery fake data generator.",
-    table_properties={"quality": "bronze", "source_system": "eventhub_capture"}
+    partition_cols=["ingestion_date"],
+    table_properties={
+        "quality": "bronze",
+        "source_system": "eventhub_capture",
+        "delta.autoOptimize.optimizeWrite": "true",
+        "delta.autoOptimize.autoCompact": "true"
+    }
 )
 def bronze_eventhub_capture_raw():
     source_path = spark.conf.get("source_path")
@@ -80,7 +86,8 @@ def bronze_eventhub_capture_raw():
             F.col("Body").cast("binary").cast("string").alias("body_json"),
             F.col("_metadata.file_path").alias("source_file"),
             F.col("_metadata.file_modification_time").alias("source_file_modification_time"),
-            F.current_timestamp().alias("bronze_ingestion_time")
+            F.current_timestamp().alias("bronze_ingestion_time"),
+            F.current_date().alias("ingestion_date")
         )
     )
 
@@ -88,7 +95,13 @@ def bronze_eventhub_capture_raw():
 @dlt.table(
     name="bronze_delivery_batches",
     comment="Parsed delivery generator batches from Event Hub Capture payload body.",
-    table_properties={"quality": "bronze", "source_system": "azure_function_fake_generator"}
+    partition_cols=["event_date"],
+    table_properties={
+        "quality": "bronze",
+        "source_system": "azure_function_fake_generator",
+        "delta.autoOptimize.optimizeWrite": "true",
+        "delta.autoOptimize.autoCompact": "true"
+    }
 )
 @dlt.expect("valid_json_payload", "batch_id IS NOT NULL")
 def bronze_delivery_batches():
@@ -102,8 +115,10 @@ def bronze_delivery_batches():
             F.col("source_file"),
             F.col("source_file_modification_time"),
             F.col("bronze_ingestion_time"),
+            F.col("ingestion_date"),
             F.col("payload.batch_id").alias("batch_id"),
             F.col("payload.ingestion_ts").cast("timestamp").alias("source_ingestion_ts"),
+            F.to_date(F.col("payload.ingestion_ts").cast("timestamp")).alias("event_date"),
             F.col("payload.source_system").alias("source_system"),
             F.col("payload.schema_version").alias("schema_version"),
             F.col("payload.tables").alias("tables"),

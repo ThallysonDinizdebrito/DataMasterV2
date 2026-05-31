@@ -91,25 +91,38 @@ resources:
         pause_status: PAUSED
       tasks:
         - task_key: ingest_azure_costs
-          spark_python_task:
-            python_file: ./observability/azure_cost_ingestion.py
-            parameters:
-              - --tenant-id
-              - ${var.azure_tenant_id}
-              - --client-id
-              - ${var.azure_client_id}
-              - --subscription-id
-              - ${var.azure_subscription_id}
-              - --catalog
-              - ${var.catalog}
-              - --schema
-              - ${var.cost_schema}
-              - --secret-scope
-              - ${var.cost_secret_scope}
-              - --secret-key
-              - ${var.cost_secret_key}
-              - --lookback-days
-              - "30"
+          notebook_task:
+            notebook_path: ./observability/azure_cost_ingestion.py
+            base_parameters:
+              tenant_id: ${var.azure_tenant_id}
+              client_id: ${var.azure_client_id}
+              subscription_id: ${var.azure_subscription_id}
+              catalog: ${var.catalog}
+              schema: ${var.cost_schema}
+              secret_scope: ${var.cost_secret_scope}
+              secret_key: ${var.cost_secret_key}
+              lookback_days: "30"
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            node_type_id: Standard_D4s_v3
+            driver_node_type_id: Standard_D4s_v3
+            num_workers: 0
+            spark_conf:
+              spark.databricks.cluster.profile: singleNode
+              spark.master: local[*]
+            custom_tags:
+              ResourceClass: SingleNode
+
+    delta_table_maintenance:
+      name: job-dmv2-delta-table-maintenance
+      tasks:
+        - task_key: optimize_and_vacuum
+          notebook_task:
+            notebook_path: ./maintenance/delta_maintenance.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              retention_hours: "168"
           new_cluster:
             spark_version: 15.4.x-scala2.12
             node_type_id: Standard_D4s_v3
