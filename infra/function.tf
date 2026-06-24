@@ -47,6 +47,8 @@ resource "azurerm_linux_function_app" "generator" {
     NUM_DRIVERS                        = tostring(var.fake_num_drivers)
     NUM_ITEMS_PER_RESTAURANTE          = tostring(var.fake_num_items_per_restaurante)
     NUM_PEDIDOS                        = tostring(var.fake_num_pedidos)
+ KEY_VAULT_NAME                       = azurerm_key_vault.main.name
+    KEY_VAULT_URI                      = azurerm_key_vault.main.vault_uri
   }
 
   lifecycle {

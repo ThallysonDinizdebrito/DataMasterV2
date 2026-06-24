@@ -58,6 +58,19 @@ variable "databricks_token" {
   default     = null
 }
 
+variable "databricks_account_id" {
+  description = "Databricks account ID for account-level operations (Unity Catalog groups)."
+  type        = string
+  default     = ""
+}
+
+variable "databricks_account_token" {
+  description = "Databricks account token for account-level operations (Unity Catalog groups)."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
 variable "databricks_sku" {
   description = "Databricks workspace SKU."
   type        = string
@@ -116,6 +129,31 @@ variable "function_location" {
   description = "Azure region used only for the Function App when the main region has App Service quota restrictions."
   type        = string
   default     = "westeurope"
+}
+
+variable "azure_client_secret" {
+  description = "Azure client secret for Azure Cost Management API. Stored in Key Vault."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "enable_azure_cost_observability" {
+  description = "Enable Azure Cost Management observability (requires azure_client_secret)."
+  type        = bool
+  default     = true
+}
+
+variable "store_databricks_token_in_kv" {
+  description = "Store Databricks PAT token in Key Vault (optional)."
+  type        = bool
+  default     = false
+}
+
+variable "enable_eventhub" {
+  description = "Enable Event Hub infrastructure (commented out by default)."
+  type        = bool
+  default     = false
 }
 
 # variable "eventhub_partition_count" {

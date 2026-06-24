@@ -31,13 +31,10 @@ results = []
 for table_name in maintenance_tables:
     full_table_name = f"{catalog}.{schema_name}.{table_name}"
 
-    print(f"Running OPTIMIZE on {full_table_name}")
-    spark.sql(f"OPTIMIZE {full_table_name}")
-
     print(f"Running VACUUM on {full_table_name} with retention {retention_hours} hours")
     spark.sql(f"VACUUM {full_table_name} RETAIN {retention_hours} HOURS")
 
-    results.append((full_table_name, "OPTIMIZE_AND_VACUUM_COMPLETED"))
+    results.append((full_table_name, "VACUUM_COMPLETED"))
 
 # COMMAND ----------
 

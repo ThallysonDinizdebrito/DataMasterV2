@@ -32,9 +32,17 @@ provider "azurerm" {
 }
 
 provider "databricks" {
+  alias               = "account"
+  host                = "https://accounts.azuredatabricks.net"
+  azure_client_id     = var.client_id
+  azure_client_secret = var.client_secret
+  azure_tenant_id     = var.tenant_id
+  auth_type           = "azure-client-secret"
+}
+
+provider "databricks" {
   host      = var.databricks_host
-  token     = var.databricks_token
-  auth_type = "pat"
+  auth_type = "azure-cli"
 }
 
 data "azurerm_client_config" "current" {}

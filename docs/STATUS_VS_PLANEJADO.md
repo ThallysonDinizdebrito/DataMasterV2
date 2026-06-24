@@ -300,7 +300,7 @@ Adicionar testes de qualidade de dados.
 ```text
 Catálogo delivery_datamaster.
 Schemas bronze, silver e gold.
-Grupos data-engineers, data-scientists e data-analysts.
+Grupos data_engineers, data_scientists e data_analysts.
 External Location para ADLS.
 Grants por perfil.
 Retenção por camada.

@@ -1,20 +1,20 @@
-resource "databricks_group" "data_engineers" {
-  count        = var.databricks_host == "" ? 0 : 1
-  display_name = "data-engineers"
+# Grupos account-level criados manualmente no Account Console
+# data-engineers, data-scientists, data-analysts
+
+# Secret scope backed by Azure Key Vault
+resource "databricks_secret_scope" "keyvault" {
+  count = var.databricks_host != "" && var.enable_azure_cost_observability ? 1 : 0
+  name  = "kv-backed"
+
+  keyvault_metadata {
+    resource_id = azurerm_key_vault.main.id
+    dns_suffix  = "vault.azure.net"
+  }
 }
 
-resource "databricks_group" "data_scientists" {
-  count        = var.databricks_host == "" ? 0 : 1
-  display_name = "data-scientists"
-}
-
-resource "databricks_group" "data_analysts" {
-  count        = var.databricks_host == "" ? 0 : 1
-  display_name = "data-analysts"
-}
-
+# Secret scope legado (opcional, para compatibilidade)
 resource "databricks_secret_scope" "main" {
-  count = var.databricks_host == "" ? 0 : 1
+  count = var.databricks_host != "" ? 1 : 0
   name  = "kv-${local.name_prefix}"
 }
 

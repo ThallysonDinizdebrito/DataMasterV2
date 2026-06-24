@@ -8,6 +8,7 @@ import azure.functions as func
 from azure.eventhub import EventData
 from azure.eventhub import EventHubProducerClient
 from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
 from faker import Faker
 
 
@@ -38,6 +39,22 @@ def get_int_setting(name, default):
     if value is None or value == "":
         return default
     return int(value)
+
+
+def get_secret_from_keyvault(secret_name):
+    """Lê um segredo do Azure Key Vault usando Managed Identity"""
+    key_vault_uri = os.getenv("KEY_VAULT_URI")
+    if not key_vault_uri:
+        raise ValueError("KEY_VAULT_URI não está definido nas configurações da Function")
+
+    credential = DefaultAzureCredential()
+    secret_client = SecretClient(vault_url=key_vault_uri, credential=credential)
+
+    try:
+        secret = secret_client.get_secret(secret_name)
+        return secret.value
+    except Exception as e:
+        raise ValueError(f"Erro ao ler segredo {secret_name} do Key Vault: {str(e)}")
 
 
 def gerar_payload():
@@ -117,6 +134,7 @@ def gerar_payload():
                 "nome": item["nome"],
                 "categoria": item["categoria"],
                 "preco": item["preco"],
+                "MerchantID": item["MerchantID"],
                 "quantidade": qtd,
                 "valor_total_item": round(valor_item, 2),
                 "created_at": agora()
@@ -161,12 +179,20 @@ def enviar_eventhub(payload):
     if not fully_qualified_namespace:
         raise ValueError("EVENTHUB_FULLY_QUALIFIED_NAMESPACE não está definido")
 
-    credential = DefaultAzureCredential()
-    producer = EventHubProducerClient(
-        fully_qualified_namespace=fully_qualified_namespace,
-        eventhub_name=eventhub_name,
-        credential=credential
-    )
+    # Se EVENTHUB_CONNECTION_STRING não estiver definido, usa Managed Identity
+    connection_string = os.getenv("EVENTHUB_CONNECTION_STRING")
+    if connection_string:
+        producer = EventHubProducerClient.from_connection_string(
+            conn_str=connection_string,
+            eventhub_name=eventhub_name
+        )
+    else:
+        credential = DefaultAzureCredential()
+        producer = EventHubProducerClient(
+            fully_qualified_namespace=fully_qualified_namespace,
+            eventhub_name=eventhub_name,
+            credential=credential
+        )
 
     try:
         with producer:

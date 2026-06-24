@@ -1,0 +1,25 @@
+# Exemplo de configuração para Terraform
+# Copie este arquivo para dev.tfvars e preencha com seus valores reais
+
+# Configurações Azure
+subscription_id = "sua-subscription-id-aqui"
+tenant_id       = "seu-tenant-id-aqui"
+client_id       = "seu-client-id-aqui"
+client_secret   = "seu-client-secret-aqui"
+
+# Configurações Databricks Workspace
+databricks_host  = "https://adb-7405608830882565.5.azuredatabricks.net"
+databricks_token = "seu-pat-token-aqui"
+
+# Configurações Databricks Account (opcional - para grupos de conta)
+databricks_account_id    = ""
+databricks_account_token = ""
+
+# Configurações Unity Catalog
+enable_unity_catalog       = true
+unity_catalog_metastore_id = "seu-metastore-id-aqui"
+
+# Outras configurações
+enable_databricks_jobs_cluster = false
+enable_private_endpoints        = false
+enable_function_app             = false

@@ -4,6 +4,10 @@ location        = "brazilsouth"
 subscription_id = "97eb265c-59ce-4122-bbe4-98f0d58d9208"
 tenant_id       = "1d1e1d50-bb96-44f7-81ad-10c6e41d1e6d"
 
+# Credenciais Azure para autenticação via Azure CLI (necessário para Unity Catalog account-level)
+client_id     = ""  # Azure AD App Client ID
+client_secret = ""  # Azure AD App Client Secret
+
 function_schedule              = "0 */1 * * * *"
 fake_num_clientes              = 1
 fake_num_restaurantes          = 1
@@ -11,9 +15,22 @@ fake_num_drivers               = 1
 fake_num_items_per_restaurante = 8
 fake_num_pedidos               = 8
 
-enable_unity_catalog       = false
+enable_unity_catalog       = true
 unity_catalog_metastore_id = ""
+
+databricks_host  = "https://adb-7405608830882565.5.azuredatabricks.net"
+databricks_token = "seu-pat-token-aqui"
+
+# Variáveis para Unity Catalog account-level (necessário para criar grupos account-level)
+databricks_account_id     = "953205e1-ba48-45aa-a0bf-77ae9a7a5240"
+databricks_account_token = "seu-account-pat-token-aqui"
 
 enable_function_app = true
 function_location   = "westeurope"
+
+# Azure Key Vault Secrets
+azure_client_secret = "seu-azure-client-secret-aqui"  # Para Azure Cost Management
+enable_azure_cost_observability = true
+store_databricks_token_in_kv = false
+enable_eventhub = false
 

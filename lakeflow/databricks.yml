@@ -32,8 +32,8 @@ variables:
     default: observability
 
   cost_secret_scope:
-    description: Databricks secret scope containing the Azure client secret
-    default: dmv2-dev
+    description: Databricks secret scope containing the Azure client secret (backed by Azure Key Vault)
+    default: kv-backed
 
   cost_secret_key:
     description: Databricks secret key containing the Azure client secret
@@ -66,12 +66,17 @@ resources:
       continuous: false
       photon: true
       channel: CURRENT
-      serverless: true
+      clusters:
+        - label: default
+          node_type_id: Standard_D4s_v3
+          driver_node_type_id: Standard_D4s_v3
+          num_workers: 1
 
       configuration:
         source_path: ${var.source_path}
         catalog_name: ${var.catalog}
         schema_name: ${var.schema}
+        dq_rules_path: ${workspace.file_path}/data_quality/rules.py
 
 
       libraries:
@@ -107,6 +112,7 @@ resources:
             node_type_id: Standard_D4s_v3
             driver_node_type_id: Standard_D4s_v3
             num_workers: 0
+            data_security_mode: SINGLE_USER
             spark_conf:
               spark.databricks.cluster.profile: singleNode
               spark.master: local[*]
@@ -128,6 +134,32 @@ resources:
             node_type_id: Standard_D4s_v3
             driver_node_type_id: Standard_D4s_v3
             num_workers: 0
+            data_security_mode: SINGLE_USER
+            spark_conf:
+              spark.databricks.cluster.profile: singleNode
+              spark.master: local[*]
+            custom_tags:
+              ResourceClass: SingleNode
+
+    apply_governance:
+      name: job-dmv2-apply-governance
+      tasks:
+        - task_key: apply_unity_catalog_governance
+          notebook_task:
+            notebook_path: ./governance/apply_governance.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              governance_schema: governance
+              data_engineer_group: data-engineers
+              data_analyst_group: data-analysts
+              data_scientist_group: data-scientists
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            node_type_id: Standard_D4s_v3
+            driver_node_type_id: Standard_D4s_v3
+            num_workers: 0
+            data_security_mode: SINGLE_USER
             spark_conf:
               spark.databricks.cluster.profile: singleNode
               spark.master: local[*]

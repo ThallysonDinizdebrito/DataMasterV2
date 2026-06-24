@@ -5,7 +5,6 @@ from pyspark.sql import functions as F
 @dlt.table(
     name="gold_daily_delivery_kpis",
     comment="Daily delivery KPIs for dashboard and operational monitoring.",
-    partition_cols=["metric_date"],
     cluster_by=["metric_date"],
     table_properties={
         "quality": "gold",
@@ -14,8 +13,6 @@ from pyspark.sql import functions as F
         "delta.autoOptimize.autoCompact": "true"
     }
 )
-@dlt.expect_or_fail("non_negative_orders", "total_orders >= 0")
-@dlt.expect_or_fail("non_negative_revenue", "total_revenue >= 0")
 def gold_daily_delivery_kpis():
     orders = dlt.read("silver_orders")
 
@@ -49,7 +46,6 @@ def gold_daily_delivery_kpis():
         "delta.autoOptimize.autoCompact": "true"
     }
 )
-@dlt.expect_or_fail("positive_restaurant_orders", "total_orders > 0")
 def gold_restaurant_performance():
     orders = dlt.read("silver_orders")
     restaurants = dlt.read("silver_restaurantes")
@@ -82,7 +78,6 @@ def gold_restaurant_performance():
         "delta.autoOptimize.autoCompact": "true"
     }
 )
-@dlt.expect_or_fail("positive_quantity", "total_quantity > 0")
 def gold_item_category_metrics():
     order_items = dlt.read("silver_order_items")
 

@@ -1,6 +1,11 @@
 import dlt
 from pyspark.sql import functions as F
 
+rules_path = spark.conf.get("dq_rules_path")
+with open(rules_path, encoding="utf-8") as rules_file:
+    rules_source = rules_file.read()
+exec(compile(rules_source, rules_path, "exec"), globals())
+
 
 @dlt.table(
     name="silver_clientes",
@@ -12,8 +17,7 @@ from pyspark.sql import functions as F
         "delta.autoOptimize.autoCompact": "true"
     }
 )
-@dlt.expect_or_drop("valid_client_id", "client_id IS NOT NULL")
-@dlt.expect_or_drop("valid_cpf", "cpf IS NOT NULL")
+@dlt.expect_all_or_drop(CLIENT_RULES)
 def silver_clientes():
     return (
         dlt.read_stream("bronze_delivery_batches")
@@ -42,8 +46,7 @@ def silver_clientes():
         "delta.autoOptimize.autoCompact": "true"
     }
 )
-@dlt.expect_or_drop("valid_merchant_id", "merchant_id IS NOT NULL")
-@dlt.expect_or_drop("valid_cnpj", "cnpj IS NOT NULL")
+@dlt.expect_all_or_drop(RESTAURANT_RULES)
 def silver_restaurantes():
     return (
         dlt.read_stream("bronze_delivery_batches")
@@ -71,8 +74,7 @@ def silver_restaurantes():
         "delta.autoOptimize.autoCompact": "true"
     }
 )
-@dlt.expect_or_drop("valid_driver_id", "driver_id IS NOT NULL")
-@dlt.expect_or_drop("valid_plate", "placa IS NOT NULL")
+@dlt.expect_all_or_drop(DRIVER_RULES)
 def silver_drivers():
     return (
         dlt.read_stream("bronze_delivery_batches")
@@ -101,8 +103,7 @@ def silver_drivers():
         "delta.autoOptimize.autoCompact": "true"
     }
 )
-@dlt.expect_or_drop("valid_item_id", "item_id IS NOT NULL")
-@dlt.expect_or_drop("valid_price", "preco > 0")
+@dlt.expect_all_or_drop(ITEM_RULES)
 def silver_items():
     return (
         dlt.read_stream("bronze_delivery_batches")
@@ -124,7 +125,6 @@ def silver_items():
 @dlt.table(
     name="silver_orders",
     comment="Cleaned order fact extracted from delivery generator batches.",
-    partition_cols=["order_date"],
     cluster_by=["order_date", "restaurant_id"],
     table_properties={
         "quality": "silver",
@@ -133,9 +133,7 @@ def silver_items():
         "delta.autoOptimize.autoCompact": "true"
     }
 )
-@dlt.expect_or_drop("valid_order_id", "order_id IS NOT NULL")
-@dlt.expect_or_drop("valid_order_amount", "valor_total > 0")
-@dlt.expect_or_drop("valid_total_quantity", "quantidade_total > 0")
+@dlt.expect_all_or_drop(ORDER_RULES)
 def silver_orders():
     return (
         dlt.read_stream("bronze_delivery_batches")
@@ -176,8 +174,7 @@ def silver_orders():
         "delta.autoOptimize.autoCompact": "true"
     }
 )
-@dlt.expect_or_drop("valid_order_item", "order_id IS NOT NULL AND item_id IS NOT NULL")
-@dlt.expect_or_drop("valid_item_quantity", "quantidade > 0")
+@dlt.expect_all_or_drop(ORDER_ITEM_RULES)
 def silver_order_items():
     return (
         dlt.read_stream("silver_orders")

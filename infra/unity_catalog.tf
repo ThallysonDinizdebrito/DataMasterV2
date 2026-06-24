@@ -1,16 +1,16 @@
-resource "databricks_metastore_assignment" "main" {
-  count                = var.enable_unity_catalog && var.databricks_host != "" && var.unity_catalog_metastore_id != "" ? 1 : 0
-  workspace_id         = azurerm_databricks_workspace.main.workspace_id
-  metastore_id         = var.unity_catalog_metastore_id
-  default_catalog_name = "delivery_datamaster"
-}
+# Metastore já está configurado no workspace, não precisa de assignment
+# resource "databricks_metastore_assignment" "main" {
+#   count                = var.enable_unity_catalog && var.databricks_host != "" && var.unity_catalog_metastore_id != "" ? 1 : 0
+#   workspace_id         = azurerm_databricks_workspace.main.workspace_id
+#   metastore_id         = var.unity_catalog_metastore_id
+#   default_catalog_name = "delivery_datamaster"
+# }
 
 resource "databricks_catalog" "delivery" {
   count        = var.enable_unity_catalog && var.databricks_host != "" ? 1 : 0
   name         = "delivery_datamaster"
   comment      = "Delivery DataMaster governed catalog"
   storage_root = "abfss://source@stdmv2devvxc02.dfs.core.windows.net/uc-managed/delivery_datamaster"
-  depends_on   = [databricks_metastore_assignment.main]
 
   properties = {
     environment = var.environment
@@ -97,3 +97,7 @@ resource "databricks_grants" "source_location" {
     privileges = ["READ_FILES"]
   }
 }
+
+# Permissões configuradas manualmente no Unity Catalog via Account Console
+# Grupos account-level criados: data-engineers, data-scientists, data-analysts
+# Permissões gerenciadas manualmente para evitar conflitos com Terraform
