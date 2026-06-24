@@ -1,18 +1,7 @@
 # Grupos account-level criados manualmente no Account Console
 # data-engineers, data-scientists, data-analysts
 
-# Secret scope backed by Azure Key Vault
-resource "databricks_secret_scope" "keyvault" {
-  count = var.databricks_host != "" && var.enable_azure_cost_observability ? 1 : 0
-  name  = "kv-backed"
-
-  keyvault_metadata {
-    resource_id = azurerm_key_vault.main.id
-    dns_name    = "vault.azure.net"
-  }
-}
-
-# Secret scope legado (opcional, para compatibilidade)
+# Secret scope legado (Databricks-managed)
 resource "databricks_secret_scope" "main" {
   count = var.databricks_host != "" ? 1 : 0
   name  = "kv-${local.name_prefix}"

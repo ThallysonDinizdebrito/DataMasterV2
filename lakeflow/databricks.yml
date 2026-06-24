@@ -32,8 +32,8 @@ variables:
     default: observability
 
   cost_secret_scope:
-    description: Databricks secret scope containing the Azure client secret (backed by Azure Key Vault)
-    default: kv-backed
+    description: Databricks secret scope containing the Azure client secret
+    default: dmv2-dev
 
   cost_secret_key:
     description: Databricks secret key containing the Azure client secret
