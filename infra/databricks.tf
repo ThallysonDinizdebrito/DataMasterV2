@@ -8,7 +8,7 @@ resource "databricks_secret_scope" "keyvault" {
 
   keyvault_metadata {
     resource_id = azurerm_key_vault.main.id
-    dns_suffix  = "vault.azure.net"
+    dns_name    = "vault.azure.net"
   }
 }
 

@@ -27,16 +27,16 @@ resource "azurerm_key_vault_secret" "databricks_token" {
 }
 
 # Segredo: Event Hub Connection String (quando Event Hub for habilitado)
-resource "azurerm_key_vault_secret" "eventhub_connection_string" {
-  count        = var.enable_eventhub ? 1 : 0
-  name         = "eventhub-connection-string"
-  value        = azurerm_eventhub_namespace.main.default_primary_connection_string
-  key_vault_id = azurerm_key_vault.main.id
-
-  lifecycle {
-    ignore_changes = [value]
-  }
-}
+# resource "azurerm_key_vault_secret" "eventhub_connection_string" {
+#   count        = var.enable_eventhub ? 1 : 0
+#   name         = "eventhub-connection-string"
+#   value        = azurerm_eventhub_namespace.main.default_primary_connection_string
+#   key_vault_id = azurerm_key_vault.main.id
+#
+#   lifecycle {
+#     ignore_changes = [value]
+#   }
+# }
 
 # Segredo: Storage Account Access Key (para Azure Function)
 resource "azurerm_key_vault_secret" "storage_access_key" {
