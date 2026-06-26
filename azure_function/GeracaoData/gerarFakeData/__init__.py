@@ -173,11 +173,11 @@ def enviar_eventhub(payload):
     eventhub_name = os.getenv("EVENTHUB_NAME")
     fully_qualified_namespace = os.getenv("EVENTHUB_FULLY_QUALIFIED_NAMESPACE")
 
-    if not eventhub_name:
-        raise ValueError("EVENTHUB_NAME não está definido")
-
-    if not fully_qualified_namespace:
-        raise ValueError("EVENTHUB_FULLY_QUALIFIED_NAMESPACE não está definido")
+    # Se Event Hub não estiver configurado, apenas loga o payload
+    if not eventhub_name or not fully_qualified_namespace:
+        print(f"[INFO] Event Hub não configurado. Payload gerado (batch_id: {payload['batch_id']}):")
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
 
     # Se EVENTHUB_CONNECTION_STRING não estiver definido, usa Managed Identity
     connection_string = os.getenv("EVENTHUB_CONNECTION_STRING")
@@ -210,6 +210,10 @@ def enviar_eventhub(payload):
 
 
 def main(mytimer: func.TimerRequest) -> None:
-    payload = gerar_payload()
-    enviar_eventhub(payload)
-    print(f"[OK] Batch {payload['batch_id']} enviado para o Event Hub")
+    try:
+        payload = gerar_payload()
+        enviar_eventhub(payload)
+        print(f"[OK] Batch {payload['batch_id']} processado com sucesso")
+    except Exception as e:
+        print(f"[ERROR] Erro ao processar batch: {str(e)}")
+        raise
