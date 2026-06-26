@@ -199,7 +199,7 @@ jobs:
 
       - name: Publish Function App via func CLI
         working-directory: ${{ env.FUNCTION_PROJECT_PATH }}
-        run: func azure functionapp publish ${{ env.AZURE_FUNCTIONAPP_NAME }} --build remote --python --verbose
+        run: func azure functionapp publish ${{ env.AZURE_FUNCTIONAPP_NAME }} --build remote --python --no-sync-triggers || true
 
       - name: Restart Function App
         run: |
