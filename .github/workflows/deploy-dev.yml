@@ -190,9 +190,16 @@ jobs:
       - name: Validate Python Function Syntax
         run: python -m py_compile ${{ env.FUNCTION_PROJECT_PATH }}/gerarFakeData/__init__.py
 
+      - name: List Function App files
+        working-directory: ${{ env.FUNCTION_PROJECT_PATH }}
+        run: ls -la
+
+      - name: Check func CLI version
+        run: func --version
+
       - name: Publish Function App via func CLI
         working-directory: ${{ env.FUNCTION_PROJECT_PATH }}
-        run: func azure functionapp publish ${{ env.AZURE_FUNCTIONAPP_NAME }} --build remote --python
+        run: func azure functionapp publish ${{ env.AZURE_FUNCTIONAPP_NAME }} --build remote --python --verbose
 
       - name: Restart Function App
         run: |
