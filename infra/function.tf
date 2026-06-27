@@ -66,17 +66,19 @@ resource "azurerm_role_assignment" "function_storage_contributor" {
   principal_id         = azurerm_linux_function_app.generator[0].identity[0].principal_id
 }
 
-resource "azurerm_role_assignment" "function_keyvault_secrets_user" {
-  count = var.enable_function_app ? 1 : 0
-
-  scope                = azurerm_key_vault.main.id
-  role_definition_name = "Key Vault Secrets User"
-  principal_id         = azurerm_linux_function_app.generator[0].identity[0].principal_id
-}
+# Role assignment não funciona com Vault access policy
+# Usamos access_policy no Key Vault em vez disso
+# resource "azurerm_role_assignment" "function_keyvault_secrets_user" {
+#   count = var.enable_function_app ? 1 : 0
+#
+#   scope                = azurerm_key_vault.main.id
+#   role_definition_name = "Key Vault Secrets User"
+#   principal_id         = azurerm_linux_function_app.generator[0].identity[0].principal_id
+# }
 
 # resource "azurerm_role_assignment" "function_eventhub_sender" {
 #   count = var.enable_function_app ? 1 : 0
-
+#
 #   scope                = azurerm_eventhub_namespace.main.id
 #   role_definition_name = "Azure Event Hubs Data Sender"
 #   principal_id         = azurerm_linux_function_app.generator[0].identity[0].principal_id
