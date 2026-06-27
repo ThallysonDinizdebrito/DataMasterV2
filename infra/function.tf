@@ -66,6 +66,20 @@ resource "azurerm_role_assignment" "function_storage_contributor" {
   principal_id         = azurerm_linux_function_app.generator[0].identity[0].principal_id
 }
 
+# Access policy para Azure Function Managed Identity no Key Vault
+resource "azurerm_key_vault_access_policy" "function" {
+  count        = var.enable_function_app ? 1 : 0
+  key_vault_id = azurerm_key_vault.main.id
+
+  tenant_id = var.tenant_id
+  object_id = azurerm_linux_function_app.generator[0].identity[0].principal_id
+
+  secret_permissions = [
+    "Get",
+    "List"
+  ]
+}
+
 # Role assignment não funciona com Vault access policy
 # Usamos access_policy no Key Vault em vez disso
 # resource "azurerm_role_assignment" "function_keyvault_secrets_user" {

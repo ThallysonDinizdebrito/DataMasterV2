@@ -125,20 +125,6 @@ resource "azurerm_key_vault" "main" {
       "Delete"
     ]
   }
-
-  # Access policy para Azure Function Managed Identity
-  dynamic "access_policy" {
-    for_each = var.enable_function_app ? [1] : []
-    content {
-      tenant_id = var.tenant_id
-      object_id = azurerm_linux_function_app.generator[0].identity[0].principal_id
-
-      secret_permissions = [
-        "Get",
-        "List"
-      ]
-    }
-  }
 }
 
 resource "azurerm_log_analytics_workspace" "main" {
