@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import random
 import string
@@ -10,6 +11,9 @@ from azure.eventhub import EventHubProducerClient
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 from faker import Faker
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def gerar_id(prefixo, tamanho=6):
@@ -175,8 +179,8 @@ def enviar_eventhub(payload):
 
     # Se Event Hub não estiver configurado, apenas loga o payload
     if not eventhub_name or not fully_qualified_namespace:
-        print(f"[INFO] Event Hub não configurado. Payload gerado (batch_id: {payload['batch_id']}):")
-        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        logger.info(f"Event Hub não configurado. Payload gerado (batch_id: {payload['batch_id']}):")
+        logger.info(json.dumps(payload, ensure_ascii=False, indent=2))
         return
 
     # Se EVENTHUB_CONNECTION_STRING não estiver definido, usa Managed Identity
@@ -213,7 +217,7 @@ def main(mytimer: func.TimerRequest) -> None:
     try:
         payload = gerar_payload()
         enviar_eventhub(payload)
-        print(f"[OK] Batch {payload['batch_id']} processado com sucesso")
+        logger.info(f"Batch {payload['batch_id']} processado com sucesso")
     except Exception as e:
-        print(f"[ERROR] Erro ao processar batch: {str(e)}")
+        logger.error(f"Erro ao processar batch: {str(e)}")
         raise
