@@ -3,6 +3,15 @@
 # NOTA: Por enquanto, os segredos são gerenciados manualmente no Databricks Secret Scope
 # Este arquivo está preparado para uso futuro quando Key Vault for totalmente integrado
 
+# Segredo de teste para validação da Azure Function
+resource "azurerm_key_vault_secret" "test_secret" {
+  name         = "test-secret"
+  value        = "test-keyvault-integration-12345"
+  key_vault_id = azurerm_key_vault.main.id
+
+  content_type = "text/plain"
+}
+
 # Segredo: Storage Account Access Key (para Azure Function - opcional)
 # resource "azurerm_key_vault_secret" "storage_access_key" {
 #   count        = var.enable_function_app ? 1 : 0
