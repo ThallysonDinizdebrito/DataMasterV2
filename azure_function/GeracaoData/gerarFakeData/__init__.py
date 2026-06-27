@@ -215,14 +215,6 @@ def enviar_eventhub(payload):
 
 def main(mytimer: func.TimerRequest) -> None:
     try:
-        # Teste de leitura do Key Vault
-        try:
-            test_secret = get_secret_from_keyvault("test-secret")
-            logger.info(f"[KEY VAULT TEST] Segredo 'test-secret' lido com sucesso: {test_secret[:10]}...")
-        except Exception as kv_error:
-            logger.warning(f"[KEY VAULT TEST] Não foi possível ler segredo 'test-secret': {str(kv_error)}")
-            logger.info("[KEY VAULT TEST] Isso é esperado se o segredo não existir no Key Vault")
-
         payload = gerar_payload()
         enviar_eventhub(payload)
         logger.info(f"Batch {payload['batch_id']} processado com sucesso")
