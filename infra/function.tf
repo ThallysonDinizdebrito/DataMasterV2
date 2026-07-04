@@ -17,7 +17,8 @@ resource "azurerm_linux_function_app" "generator" {
   location                   = var.function_location
   service_plan_id            = azurerm_service_plan.function[0].id
   storage_account_name       = azurerm_storage_account.adls.name
-  # storage_account_access_key removido - usa Managed Identity via role assignment
+  storage_account_access_key = azurerm_storage_account.adls.primary_access_key
+  # Azure Function Linux requer storage_account_access_key para file share (Managed Identity não suportado)
   tags                       = local.tags
 
   identity {
@@ -63,15 +64,6 @@ resource "azurerm_role_assignment" "function_storage_contributor" {
 
   scope                = azurerm_storage_account.adls.id
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azurerm_linux_function_app.generator[0].identity[0].principal_id
-}
-
-# Role adicional para file share (necessário quando storage_account_access_key é removido)
-resource "azurerm_role_assignment" "function_storage_file_contributor" {
-  count = var.enable_function_app ? 1 : 0
-
-  scope                = azurerm_storage_account.adls.id
-  role_definition_name = "Storage File Data Contributor"
   principal_id         = azurerm_linux_function_app.generator[0].identity[0].principal_id
 }
 
