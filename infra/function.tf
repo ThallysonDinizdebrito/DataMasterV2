@@ -17,7 +17,7 @@ resource "azurerm_linux_function_app" "generator" {
   location                   = var.function_location
   service_plan_id            = azurerm_service_plan.function[0].id
   storage_account_name       = azurerm_storage_account.adls.name
-  storage_account_access_key = azurerm_storage_account.adls.primary_access_key
+  # storage_account_access_key removido - usa Managed Identity via role assignment
   tags                       = local.tags
 
   identity {
