@@ -66,6 +66,15 @@ resource "azurerm_role_assignment" "function_storage_contributor" {
   principal_id         = azurerm_linux_function_app.generator[0].identity[0].principal_id
 }
 
+# Role adicional para file share (necessário quando storage_account_access_key é removido)
+resource "azurerm_role_assignment" "function_storage_file_contributor" {
+  count = var.enable_function_app ? 1 : 0
+
+  scope                = azurerm_storage_account.adls.id
+  role_definition_name = "Storage File Data Contributor"
+  principal_id         = azurerm_linux_function_app.generator[0].identity[0].principal_id
+}
+
 # Access policy para Azure Function Managed Identity no Key Vault
 resource "azurerm_key_vault_access_policy" "function" {
   count        = var.enable_function_app ? 1 : 0
