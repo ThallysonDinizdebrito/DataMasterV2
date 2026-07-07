@@ -145,34 +145,6 @@ resource "azurerm_application_insights" "function" {
   tags                = local.tags
 }
 
-resource "azurerm_monitor_action_group" "ops" {
-  name                = "ag-${local.name_prefix}-ops"
-  resource_group_name = azurerm_resource_group.main.name
-  short_name          = "dmv2ops"
-  tags                = local.tags
-
-  email_receiver {
-    name                    = "ops-email"
-    email_address           = var.ops_email
-    use_common_alert_schema = true
-  }
-}
-
-resource "azurerm_monitor_diagnostic_setting" "storage" {
-  name                       = "diag-${local.name_prefix}-storage"
-  target_resource_id         = azurerm_storage_account.adls.id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
-
-  metric {
-    category = "Transaction"
-    enabled  = true
-  }
-
-  metric {
-    category = "Capacity"
-    enabled  = true
-  }
-}
 
 resource "azurerm_databricks_workspace" "main" {
   name                        = "dbw-${local.name_prefix}"

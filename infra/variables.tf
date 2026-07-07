@@ -101,18 +101,6 @@ variable "unity_catalog_metastore_id" {
   default     = ""
 }
 
-variable "enable_databricks_jobs_cluster" {
-  description = "Enable creation of a classic all-purpose/jobs cluster in Databricks."
-  type        = bool
-  default     = false
-}
-
-variable "ops_email" {
-  description = "Operations email for Azure Monitor action group."
-  type        = string
-  default     = "ops@example.com"
-}
-
 variable "function_schedule" {
   description = "Azure Function timer schedule."
   type        = string
