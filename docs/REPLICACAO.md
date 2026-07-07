@@ -610,12 +610,7 @@ DATABRICKS_TOKEN
 
 O secret `DATABRICKS_TOKEN` autentica o Databricks CLI no workspace.
 
-O secret `STORAGE_ACCOUNT_KEY` foi usado temporariamente no MVP, mas não é mais necessário para o deploy Databricks após a migração para External Location.
-
-```text
-Storage Account Key via Spark config = removido
-External Location via Unity Catalog   = padrão atual
-```
+O acesso ao ADLS ocorre via Unity Catalog External Location com Managed Identity.
 
 Configuração removida do bundle:
 
@@ -640,6 +635,9 @@ gh secret list --repo ThallysonDinizdebrito/DataMasterV2
 Resultado esperado:
 
 ```text
+AZURE_CLIENT_ID
+AZURE_TENANT_ID
+AZURE_SUBSCRIPTION_ID
 DATABRICKS_TOKEN
 ```
 
@@ -684,11 +682,10 @@ Checklist antes de rodar a Action após migração para External Location:
 2. GitHub Secret DATABRICKS_TOKEN existe e não expirou.
 3. External Location extloc_dmv2_source_lab existe e aponta para o storage stdmv2devvxc02.
 4. O workflow executa os comandos Databricks com working-directory: lakeflow.
-5. O workflow não exporta mais BUNDLE_VAR_storage_account_key.
-6. O workflow executa databricks bundle run delivery_eventhub_medallion_v2 -t dev após o deploy.
+5. O workflow executa databricks bundle run delivery_eventhub_medallion_v2 -t dev após o deploy.
 ```
 
-Depois da migração, não é necessário preparar `$env:BUNDLE_VAR_storage_account_key` no computador local para validar ou fazer deploy do bundle. O acesso ao ADLS ocorre via Unity Catalog External Location.
+Depois da migração, não é necessário preparar variáveis de ambiente de storage account key para validar ou fazer deploy do bundle. O acesso ao ADLS ocorre via Unity Catalog External Location.
 
 ### 14.2.1. Autenticação Azure do GitHub Actions via OIDC
 
@@ -821,18 +818,13 @@ make tf-validate
 make databricks-auth
 ```
 
-Para validar o Databricks Bundle localmente, antes defina a variável de ambiente:
+Para validar o Databricks Bundle localmente:
 
 ```powershell
-$env:BUNDLE_VAR_storage_account_key = (az storage account keys list --resource-group rg-dmv2-dev --account-name stdmv2devvxc02 --query "[0].value" -o tsv).Trim()
 make databricks-validate
 ```
 
-Na GitHub Action, essa variável é preenchida automaticamente pelo secret:
-
-```text
-STORAGE_ACCOUNT_KEY
-```
+O acesso ao ADLS ocorre via Unity Catalog External Location, não é necessário configurar storage account key.
 
 Comandos que executam mudanças reais e devem ser usados com cuidado:
 
