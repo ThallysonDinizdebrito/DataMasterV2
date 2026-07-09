@@ -228,6 +228,9 @@ jobs:
     env:
       DATABRICKS_HOST: https://adb-7405608830882565.5.azuredatabricks.net/
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      BUNDLE_VAR_azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      BUNDLE_VAR_azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      BUNDLE_VAR_azure_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     steps:
       - name: Checkout repository

@@ -17,15 +17,15 @@ variables:
 
   azure_tenant_id:
     description: Azure tenant ID used by the Azure Cost Management ingestion job
-    default: 1d1e1d50-bb96-44f7-81ad-10c6e41d1e6d
+    default: ""
 
   azure_client_id:
     description: Azure client ID used by the Azure Cost Management ingestion job
-    default: 7da295f3-e9d6-4a72-9f47-8e3bde7fcc92
+    default: ""
 
   azure_subscription_id:
     description: Azure subscription ID used by the Azure Cost Management ingestion job
-    default: 97eb265c-59ce-4122-bbe4-98f0d58d9208
+    default: ""
 
   cost_schema:
     description: Target schema for Azure cost observability tables
@@ -49,9 +49,9 @@ targets:
       catalog: delivery_datamaster
       schema: default
       source_path: abfss://source@stdmv2devvxc02.dfs.core.windows.net/eventhub-capture
-      azure_tenant_id: 1d1e1d50-bb96-44f7-81ad-10c6e41d1e6d
-      azure_client_id: 7da295f3-e9d6-4a72-9f47-8e3bde7fcc92
-      azure_subscription_id: 97eb265c-59ce-4122-bbe4-98f0d58d9208
+      azure_tenant_id: ""
+      azure_client_id: ""
+      azure_subscription_id: ""
       cost_schema: observability
       cost_secret_scope: dmv2-dev
       cost_secret_key: azure-client-secret

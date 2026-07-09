@@ -13,9 +13,9 @@ from pyspark.sql.types import DateType, DecimalType, StringType, StructField, St
 # COMMAND ----------
 
 # Widgets são parâmetros do notebook. O Databricks Job envia esses valores pelo bundle.
-dbutils.widgets.text("tenant_id", "1d1e1d50-bb96-44f7-81ad-10c6e41d1e6d")
-dbutils.widgets.text("client_id", "7da295f3-e9d6-4a72-9f47-8e3bde7fcc92")
-dbutils.widgets.text("subscription_id", "97eb265c-59ce-4122-bbe4-98f0d58d9208")
+dbutils.widgets.text("tenant_id", "")
+dbutils.widgets.text("client_id", "")
+dbutils.widgets.text("subscription_id", "")
 dbutils.widgets.text("catalog", "delivery_datamaster")
 dbutils.widgets.text("schema", "observability")
 dbutils.widgets.text("secret_scope", "dmv2-dev")
